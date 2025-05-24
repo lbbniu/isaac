@@ -1,5 +1,9 @@
 [English](README.md) | [简体中文](README_ZH.md)
 
+# ISAAC
+
+ISAAC 是一个由 Robert J. Jenkins Jr. 在 1996 年设计的密码学安全的伪随机数生成器（CSPRNG）和流密码。这个 Go 实现提供了 32 位和 64 位版本的 ISAAC，以及一个支持两种类型的泛型实现。
+
 <div align="center">
 
 [![Go](https://github.com/lbbniu/isaac/workflows/Go/badge.svg?branch=main)](https://github.com/lbbniu/isaac/actions)
@@ -10,10 +14,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 </div>
-
-# ISAAC
-
-ISAAC 是一个由 Robert J. Jenkins Jr. 在 1996 年设计的密码学安全的伪随机数生成器（CSPRNG）和流密码。这个 Go 实现提供了 32 位和 64 位版本的 ISAAC，以及一个支持两种类型的泛型实现。
 
 ## 特性
 

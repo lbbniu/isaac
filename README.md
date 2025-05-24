@@ -1,5 +1,9 @@
 [English](README.md) | [简体中文](README_ZH.md)
 
+# ISAAC
+
+ISAAC is a cryptographically secure pseudorandom number generator (CSPRNG) and stream cipher designed by Robert J. Jenkins Jr. in 1996. This Go implementation provides both 32-bit and 64-bit versions of ISAAC, with a generic implementation that supports both types.
+
 <div align="center">
 
 [![Go](https://github.com/lbbniu/isaac/workflows/Go/badge.svg?branch=main)](https://github.com/lbbniu/isaac/actions)
@@ -10,10 +14,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 </div>
-
-# ISAAC
-
-ISAAC is a cryptographically secure pseudorandom number generator (CSPRNG) and stream cipher designed by Robert J. Jenkins Jr. in 1996. This Go implementation provides both 32-bit and 64-bit versions of ISAAC, with a generic implementation that supports both types.
 
 ## Features
 
