@@ -1,4 +1,15 @@
-[English](README.md) | [中文](README_ZH.md)
+[English](README.md) | [简体中文](README_ZH.md)
+
+<div align="center">
+
+[![Go](https://github.com/lbbniu/isaac/workflows/Go/badge.svg?branch=main)](https://github.com/lbbniu/isaac/actions)
+[![codecov](https://codecov.io/gh/lbbniu/isaac/branch/main/graph/badge.svg)](https://codecov.io/gh/lbbniu/isaac)
+[![Go Report Card](https://goreportcard.com/badge/github.com/lbbniu/isaac)](https://goreportcard.com/report/github.com/lbbniu/isaac)
+[![Release](https://img.shields.io/github/v/release/lbbniu/isaac.svg?style=flat-square)](https://github.com/lbbniu/isaac)
+[![Go Reference](https://pkg.go.dev/badge/github.com/lbbniu/isaac.svg)](https://pkg.go.dev/github.com/lbbniu/isaac)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+</div>
 
 # ISAAC
 
