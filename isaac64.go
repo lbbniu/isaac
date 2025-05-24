@@ -1,5 +1,7 @@
 package isaac
 
+import "math"
+
 type UINT64_C = uint64
 
 // Isaac64 对应 struct isaac_state
@@ -18,39 +20,40 @@ const (
 	ISAAC_WORDS_LOG = 8
 )
 
-func just(a uint64) uint64 {
-	return a & ((1 << 1 << (ISAAC_BITS - 1)) - 1)
+func just64(a uint64) uint64 {
+	// return a & ((1 << 1 << (ISAAC_BITS - 1)) - 1)
+	return a & math.MaxUint64
 }
 
-// ind 原始C里的宏：ind(mm, x) = *(ub8*)((ub1*)(mm) + ((x) & ((RANDSIZ-1)<<3)))
+// ind64 原始C里的宏：ind64(mm, x) = *(ub8*)((ub1*)(mm) + ((x) & ((RANDSIZ-1)<<3)))
 // 解释：对 mm 做"按字节"的偏移，然后再取 64 位整型。
 // 等价于在 Go 中： mm[( (x) & ((RANDSIZ-1)<<3)) >> 3]。
-func ind(m []uint64, x uint64) uint64 {
+func ind64(m []uint64, x uint64) uint64 {
 	return m[(x&((ISAAC_WORDS-1)*8))>>3]
 }
 
-// mix 对应原始C里的宏 mix(a,b,c,d,e,f,g,h)
-func mix(a, b, c, d, e, f, g, h uint64) (na, nb, nc, nd, ne, nf, ng, nh uint64) {
+// mix64 对应原始C里的宏 mix64(a,b,c,d,e,f,g,h)
+func mix64(a, b, c, d, e, f, g, h uint64) (na, nb, nc, nd, ne, nf, ng, nh uint64) {
 	a -= e
-	f ^= (just(h) >> 9)
+	f ^= (just64(h) >> 9)
 	h += a
 	b -= f
 	g ^= (a << 9)
 	a += b
 	c -= g
-	h ^= (just(b) >> 23)
+	h ^= (just64(b) >> 23)
 	b += c
 	d -= h
 	a ^= (c << 15)
 	c += d
 	e -= a
-	b ^= (just(d) >> 14)
+	b ^= (just64(d) >> 14)
 	d += e
 	f -= b
 	c ^= (e << 20)
 	e += f
 	g -= c
-	d ^= (just(f) >> 17)
+	d ^= (just64(f) >> 17)
 	f += g
 	h -= d
 	e ^= (g << 14)
@@ -73,33 +76,33 @@ func (s *Isaac64) isaac_refill(r []uint64) {
 		// step1
 		x := m[i]
 		a = (^(a ^ (a << 21))) + m[HALF+i]
-		y := ind(s.m, x) + a + b
+		y := ind64(s.m, x) + a + b
 		m[i] = y
-		b = just(ind(s.m, y>>ISAAC_WORDS_LOG) + x)
+		b = just64(ind64(s.m, y>>ISAAC_WORDS_LOG) + x)
 		r[i] = b
 
 		// step2
 		x = m[i+1]
 		a = (a ^ (a >> 5)) + m[HALF+i+1]
-		y = ind(s.m, x) + a + b
+		y = ind64(s.m, x) + a + b
 		m[i+1] = y
-		b = just(ind(s.m, y>>ISAAC_WORDS_LOG) + x)
+		b = just64(ind64(s.m, y>>ISAAC_WORDS_LOG) + x)
 		r[i+1] = b
 
 		// step3
 		x = m[i+2]
 		a = (a ^ (a << 12)) + m[HALF+i+2]
-		y = ind(s.m, x) + a + b
+		y = ind64(s.m, x) + a + b
 		m[i+2] = y
-		b = just(ind(s.m, y>>ISAAC_WORDS_LOG) + x)
+		b = just64(ind64(s.m, y>>ISAAC_WORDS_LOG) + x)
 		r[i+2] = b
 
 		// step4
 		x = m[i+3]
 		a = (a ^ (a >> 33)) + m[HALF+i+3]
-		y = ind(s.m, x) + a + b
+		y = ind64(s.m, x) + a + b
 		m[i+3] = y
-		b = just(ind(s.m, y>>ISAAC_WORDS_LOG) + x)
+		b = just64(ind64(s.m, y>>ISAAC_WORDS_LOG) + x)
 		r[i+3] = b
 	}
 
@@ -108,33 +111,33 @@ func (s *Isaac64) isaac_refill(r []uint64) {
 		// step1
 		x := m[i]
 		a = (^(a ^ (a << 21))) + m[i-HALF]
-		y := ind(s.m, x) + a + b
+		y := ind64(s.m, x) + a + b
 		m[i] = y
-		b = just(ind(s.m, y>>ISAAC_WORDS_LOG) + x)
+		b = just64(ind64(s.m, y>>ISAAC_WORDS_LOG) + x)
 		r[i] = b
 
 		// step2
 		x = m[i+1]
 		a = (a ^ (a >> 5)) + m[i-HALF+1]
-		y = ind(s.m, x) + a + b
+		y = ind64(s.m, x) + a + b
 		m[i+1] = y
-		b = just(ind(s.m, y>>ISAAC_WORDS_LOG) + x)
+		b = just64(ind64(s.m, y>>ISAAC_WORDS_LOG) + x)
 		r[i+1] = b
 
 		// step3
 		x = m[i+2]
 		a = (a ^ (a << 12)) + m[i-HALF+2]
-		y = ind(s.m, x) + a + b
+		y = ind64(s.m, x) + a + b
 		m[i+2] = y
-		b = just(ind(s.m, y>>ISAAC_WORDS_LOG) + x)
+		b = just64(ind64(s.m, y>>ISAAC_WORDS_LOG) + x)
 		r[i+2] = b
 
 		// step4
 		x = m[i+3]
 		a = (a ^ (a >> 33)) + m[i-HALF+3]
-		y = ind(s.m, x) + a + b
+		y = ind64(s.m, x) + a + b
 		m[i+3] = y
-		b = just(ind(s.m, y>>ISAAC_WORDS_LOG) + x)
+		b = just64(ind64(s.m, y>>ISAAC_WORDS_LOG) + x)
 		r[i+3] = b
 	}
 
@@ -164,7 +167,7 @@ func (s *Isaac64) isaac_seed() {
 		f += s.m[i+5]
 		g += s.m[i+6]
 		h += s.m[i+7]
-		a, b, c, d, e, f, g, h = mix(a, b, c, d, e, f, g, h)
+		a, b, c, d, e, f, g, h = mix64(a, b, c, d, e, f, g, h)
 		s.m[i] = a
 		s.m[i+1] = b
 		s.m[i+2] = c
@@ -185,7 +188,7 @@ func (s *Isaac64) isaac_seed() {
 		f += s.m[i+5]
 		g += s.m[i+6]
 		h += s.m[i+7]
-		a, b, c, d, e, f, g, h = mix(a, b, c, d, e, f, g, h)
+		a, b, c, d, e, f, g, h = mix64(a, b, c, d, e, f, g, h)
 		s.m[i] = a
 		s.m[i+1] = b
 		s.m[i+2] = c
@@ -201,7 +204,7 @@ func (s *Isaac64) isaac_seed() {
 	s.c = 0
 }
 
-func New() *Isaac64 {
+func NewIsaac64() *Isaac64 {
 	return &Isaac64{
 		m: make([]uint64, ISAAC_WORDS),
 		a: 0,
