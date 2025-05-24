@@ -4,7 +4,7 @@ import (
 	"math"
 )
 
-// ISAAC 结构体使用泛型类型
+// ISAAC struct using generic type
 type ISAAC[T uint32 | uint64] struct {
 	m []T
 	r []T
@@ -13,16 +13,16 @@ type ISAAC[T uint32 | uint64] struct {
 	c T
 }
 
-// New 创建一个新的 ISAAC 实例
+// New creates a new ISAAC instance
 func New[T uint32 | uint64]() *ISAAC[T] {
 	var isaac ISAAC[T]
 	isaac.m = make([]T, ISAAC_WORDS)
 	return &isaac
 }
 
-// Seed 初始化 ISAAC
+// Seed initializes ISAAC
 func (s *ISAAC[T]) Seed(seed T) {
-	// 使用与 C 版本相同的初始值
+	// Use the same initial values as the C version
 	var a, b, c, d, e, f, g, h T
 	switch any(a).(type) {
 	case uint32:
@@ -47,16 +47,16 @@ func (s *ISAAC[T]) Seed(seed T) {
 		a, b, c, d, e, f, g, h = T(a64), T(b64), T(c64), T(d64), T(e64), T(f64), T(g64), T(h64)
 	}
 
-	// 初始化 m 数组
+	// Initialize m array
 	for i := 0; i < ISAAC_WORDS; i++ {
 		s.m[i] = 0
 	}
 
-	// 使用种子初始化 m 数组
+	// Initialize m array with seed
 	s.m[0] = seed
 
 	// Mix S->m so that every part of the seed affects every part of the state
-	// 二遍混合
+	// Two rounds of mixing
 	for range [2]struct{}{} {
 		for i := 0; i < ISAAC_WORDS; i += 8 {
 			a += s.m[i]
@@ -84,7 +84,7 @@ func (s *ISAAC[T]) Seed(seed T) {
 	s.c = 0
 }
 
-// Refill 重新填充随机数数组
+// Refill replenishes the random number array
 func (isaac *ISAAC[T]) Refill(r []T) {
 	a := isaac.a
 	b := isaac.b + (isaac.c + 1)
@@ -93,7 +93,7 @@ func (isaac *ISAAC[T]) Refill(r []T) {
 	m := isaac.m
 	HALF := ISAAC_WORDS / 2
 
-	// isaac_step 对应 C 语言中的 ISAAC_STEP 宏
+	// isaac_step corresponds to the ISAAC_STEP macro in C
 	step := func(i int, off int, mix T) {
 		switch any(a).(type) {
 		case uint32:
@@ -108,7 +108,7 @@ func (isaac *ISAAC[T]) Refill(r []T) {
 		r[i] = b
 	}
 
-	// 前半段
+	// First half
 	for i := 0; i < HALF; i += 4 {
 		switch any(a).(type) {
 		case uint32:
@@ -128,12 +128,12 @@ func (isaac *ISAAC[T]) Refill(r []T) {
 			// step3: a = a ^ (a << 12)
 			step(i+2, HALF, a^(a<<12))
 			// step4: a = a ^ (a >> 33)
-			//nolint:staticcheck // 这里的 >>33 只会在 uint64 分支下执行，uint32 不会触发
+			//nolint:staticcheck // >>33 is only executed in uint64 branch, uint32 won't trigger
 			step(i+3, HALF, a^(just(a)>>33))
 		}
 	}
 
-	// 后半段
+	// Second half
 	for i := HALF; i < ISAAC_WORDS; i += 4 {
 		switch any(a).(type) {
 		case uint32:
@@ -153,7 +153,7 @@ func (isaac *ISAAC[T]) Refill(r []T) {
 			// step3: a = a ^ (a << 12)
 			step(i+2, -HALF, a^(a<<12))
 			// step4: a = a ^ (a >> 33)
-			//nolint:staticcheck // 这里的 >>33 只会在 uint64 分支下执行，uint32 不会触发
+			//nolint:staticcheck // >>33 is only executed in uint64 branch, uint32 won't trigger
 			step(i+3, -HALF, a^(just(a)>>33))
 		}
 	}
@@ -162,7 +162,7 @@ func (isaac *ISAAC[T]) Refill(r []T) {
 	isaac.b = b
 }
 
-// Rand 返回下一个随机数
+// Rand returns the next random number
 func (isaac *ISAAC[T]) Rand() T {
 	if len(isaac.r) == 0 {
 		r := make([]T, ISAAC_WORDS)
@@ -174,7 +174,7 @@ func (isaac *ISAAC[T]) Rand() T {
 	return result
 }
 
-// 可以用泛型实现
+// Generic implementation of ind function
 func ind[T uint32 | uint64](m []T, x T) T {
 	var shift T
 	switch any(x).(type) {
@@ -186,7 +186,7 @@ func ind[T uint32 | uint64](m []T, x T) T {
 	return m[(x&((ISAAC_WORDS-1)<<shift))>>shift]
 }
 
-// 1. 先实现 just 的泛型版本
+// Generic implementation of just function
 func just[T uint32 | uint64](a T) T {
 	switch v := any(a).(type) {
 	case uint32:
@@ -198,7 +198,7 @@ func just[T uint32 | uint64](a T) T {
 	}
 }
 
-// 2. 然后实现 mix 的泛型版本，它可以使用泛型版本的 just
+// Generic implementation of mix function
 func mix[T uint32 | uint64](a, b, c, d, e, f, g, h T) (T, T, T, T, T, T, T, T) {
 	switch any(a).(type) {
 	case uint32:
