@@ -4,6 +4,13 @@ import (
 	"math"
 )
 
+// 常量定义，对齐 C 版本
+const (
+	ISAAC_BITS      = 64
+	ISAAC_WORDS     = 1 << 8
+	ISAAC_WORDS_LOG = 8
+)
+
 // ISAAC struct using generic type
 type ISAAC[T uint32 | uint64] struct {
 	m []T
@@ -15,13 +22,13 @@ type ISAAC[T uint32 | uint64] struct {
 
 // New creates a new ISAAC instance
 func New[T uint32 | uint64]() *ISAAC[T] {
-	var isaac ISAAC[T]
-	isaac.m = make([]T, ISAAC_WORDS)
-	return &isaac
+	var s ISAAC[T]
+	s.m = make([]T, ISAAC_WORDS)
+	return &s
 }
 
 // Seed initializes ISAAC
-func (s *ISAAC[T]) Seed(seed T, initValues ...T) {
+func (s *ISAAC[T]) Seed(seed [ISAAC_WORDS]T, initValues ...T) {
 	if len(initValues) > 0 && len(initValues) != 8 {
 		panic("isaac: need exactly 8 initial values")
 	}
@@ -79,9 +86,7 @@ func (s *ISAAC[T]) Seed(seed T, initValues ...T) {
 	for i := 0; i < ISAAC_WORDS; i++ {
 		s.m[i] = 0
 	}
-
-	// Initialize m array with seed
-	s.m[0] = seed
+	copy(s.m[:], seed[:])
 
 	// Mix S->m so that every part of the seed affects every part of the state
 	// Two rounds of mixing
@@ -113,12 +118,12 @@ func (s *ISAAC[T]) Seed(seed T, initValues ...T) {
 }
 
 // Refill replenishes the random number array
-func (isaac *ISAAC[T]) Refill(r []T) {
-	a := isaac.a
-	b := isaac.b + (isaac.c + 1)
-	isaac.c++
+func (s *ISAAC[T]) Refill(r *[ISAAC_WORDS]T) {
+	a := s.a
+	b := s.b + (s.c + 1)
+	s.c++
 
-	m := isaac.m
+	m := s.m
 	HALF := ISAAC_WORDS / 2
 
 	// isaac_step corresponds to the ISAAC_STEP macro in C
@@ -186,19 +191,19 @@ func (isaac *ISAAC[T]) Refill(r []T) {
 		}
 	}
 
-	isaac.a = a
-	isaac.b = b
+	s.a = a
+	s.b = b
 }
 
 // Rand returns the next random number
-func (isaac *ISAAC[T]) Rand() T {
-	if len(isaac.r) == 0 {
-		r := make([]T, ISAAC_WORDS)
-		isaac.Refill(r)
-		isaac.r = r
+func (s *ISAAC[T]) Rand() T {
+	if len(s.r) == 0 {
+		var r [ISAAC_WORDS]T
+		s.Refill(&r)
+		s.r = r[:]
 	}
-	result := isaac.r[0]
-	isaac.r = isaac.r[1:]
+	result := s.r[0]
+	s.r = s.r[1:]
 	return result
 }
 

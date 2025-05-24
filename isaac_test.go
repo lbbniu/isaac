@@ -9,7 +9,7 @@ import (
 
 // TestIsaac64 用例数据来自 https://github.com/coreutils/coreutils/blob/master/gl/tests/test-rand-isaac.c
 func TestISAAC64(t *testing.T) {
-	testCases := [][]uint64{
+	testCases := [][ISAAC_WORDS]uint64{
 		{
 			UINT64_C(0x12a8f216af9418c2), UINT64_C(0xd4490ad526f14431),
 			UINT64_C(0xb49c3b3995091a36), UINT64_C(0x5b45e522e4b1b4ef),
@@ -272,22 +272,23 @@ func TestISAAC64(t *testing.T) {
 		},
 	}
 
-	// Seed with zeros, and discard the first buffer of output,
-	// as that's what the standard programs do.
-	s := NewIsaac64()
-	s.Seed(0)
-	r := make([]uint64, ISAAC_WORDS)
-	s.Refill(r)
+	s := New[uint64]()
+	var seed [ISAAC_WORDS]uint64
+	s.Seed(seed)
+
+	var r [ISAAC_WORDS]uint64
+	s.Refill(&r)
+
 	for idx, testCase := range testCases {
 		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
-			s.Refill(r)
+			s.Refill(&r)
 			require.Equal(t, testCase, r)
 		})
 	}
 }
 
 func TestISAAC32(t *testing.T) {
-	testCases := [][]uint32{
+	testCases := [][ISAAC_WORDS]uint32{
 		{
 			UINT32_C(0xf650e4c8), UINT32_C(0xe448e96d),
 			UINT32_C(0x98db2fb4), UINT32_C(0xf5fad54f),
@@ -550,23 +551,16 @@ func TestISAAC32(t *testing.T) {
 		},
 	}
 
-	s := NewIsaac32()
-	s.Seed(0)
-	// for i := 0; i < ISAAC_WORDS; i++ {
-	// 	fmt.Printf("m[%d]: %d\n", i, s.m[i])
-	// }
-	// return
+	s := New[uint32]()
+	var seed [ISAAC_WORDS]uint32
+	s.Seed(seed)
 
-	r := make([]uint32, ISAAC_WORDS)
-	s.Refill(r)
+	var r [ISAAC_WORDS]uint32
+	s.Refill(&r)
 
-	// for i := 0; i < ISAAC_WORDS; i++ {
-	// 	fmt.Printf("r[%d]: %d\n", i, r[i])
-	// }
-	// return
 	for idx, testCase := range testCases {
 		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
-			s.Refill(r)
+			s.Refill(&r)
 			require.Equal(t, testCase, r)
 		})
 	}
