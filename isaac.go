@@ -22,12 +22,16 @@ func New[T uint32 | uint64]() *ISAAC[T] {
 
 // Seed initializes ISAAC
 func (s *ISAAC[T]) Seed(seed T, initValues ...T) {
+	if len(initValues) > 0 && len(initValues) != 8 {
+		panic("isaac: need exactly 8 initial values")
+	}
+
 	// Use the same initial values as the C version
 	var a, b, c, d, e, f, g, h T
 	switch any(a).(type) {
 	case uint32:
 		var a32, b32, c32, d32, e32, f32, g32, h32 uint32
-		if len(initValues) >= 8 {
+		if len(initValues) == 8 {
 			a32 = uint32(initValues[0])
 			b32 = uint32(initValues[1])
 			c32 = uint32(initValues[2])
@@ -49,7 +53,7 @@ func (s *ISAAC[T]) Seed(seed T, initValues ...T) {
 		a, b, c, d, e, f, g, h = T(a32), T(b32), T(c32), T(d32), T(e32), T(f32), T(g32), T(h32)
 	case uint64:
 		var a64, b64, c64, d64, e64, f64, g64, h64 uint64
-		if len(initValues) >= 8 {
+		if len(initValues) == 8 {
 			a64 = uint64(initValues[0])
 			b64 = uint64(initValues[1])
 			c64 = uint64(initValues[2])

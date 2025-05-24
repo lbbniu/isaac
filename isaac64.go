@@ -157,9 +157,13 @@ func NewIsaac64() *Isaac64 {
 
 // Seed initializes ISAAC64
 func (isaac *Isaac64) Seed(seed uint64, initValues ...uint64) {
+	if len(initValues) > 0 && len(initValues) != 8 {
+		panic("isaac: need exactly 8 initial values for uint64")
+	}
+
 	// Use the same initial values as the C version
 	var a, b, c, d, e, f, g, h uint64
-	if len(initValues) >= 8 {
+	if len(initValues) == 8 {
 		a = initValues[0]
 		b = initValues[1]
 		c = initValues[2]

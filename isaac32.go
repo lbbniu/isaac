@@ -150,9 +150,13 @@ func NewIsaac32() *Isaac32 {
 
 // Seed initializes ISAAC32
 func (isaac *Isaac32) Seed(seed uint32, initValues ...uint32) {
+	if len(initValues) > 0 && len(initValues) != 8 {
+		panic("isaac: need exactly 8 initial values for uint32")
+	}
+
 	// Use the same initial values as the C version
 	var a, b, c, d, e, f, g, h uint32
-	if len(initValues) >= 8 {
+	if len(initValues) == 8 {
 		a = initValues[0]
 		b = initValues[1]
 		c = initValues[2]
