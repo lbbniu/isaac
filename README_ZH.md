@@ -83,4 +83,6 @@ ISAAC 被设计为密码学安全的。但请注意：
 ## 参考资料
 
 - [ISAAC: 一个快速的密码学随机数生成器](http://burtleburtle.net/bob/rand/isaac.html)
-- [ISAAC 和 RC4](http://burtleburtle.net/bob/rand/isaacafa.html) 
+- [ISAAC 和 RC4](http://burtleburtle.net/bob/rand/isaacafa.html)
+- [GNU Coreutils ISAAC 测试](https://github.com/coreutils/coreutils/blob/master/gl/tests/test-rand-isaac.c)
+- [GNU Coreutils ISAAC 实现](https://github.com/coreutils/coreutils/blob/master/gl/lib/rand-isaac.c) 

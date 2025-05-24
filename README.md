@@ -84,3 +84,5 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 - [ISAAC: a fast cryptographic random number generator](http://burtleburtle.net/bob/rand/isaac.html)
 - [ISAAC and RC4](http://burtleburtle.net/bob/rand/isaacafa.html)
+- [GNU Coreutils ISAAC Test](https://github.com/coreutils/coreutils/blob/master/gl/tests/test-rand-isaac.c)
+- [GNU Coreutils ISAAC Implementation](https://github.com/coreutils/coreutils/blob/master/gl/lib/rand-isaac.c)
