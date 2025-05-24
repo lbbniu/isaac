@@ -10,6 +10,7 @@ ISAAC is a cryptographically secure pseudorandom number generator (CSPRNG) and s
 - Fast and efficient
 - Thread-safe
 - No external dependencies
+- Customizable initial values
 
 ## Installation
 
@@ -53,6 +54,11 @@ rng := isaac.New[uint64]()
 // Create and seed a new ISAAC instance
 rng := isaac.New[uint32]()
 rng.Seed(12345) // Seed with a uint32 value
+
+// Or with custom initial values
+rng.Seed(12345, 0x9e3779b9, 0x9e3779b9, 0x9e3779b9, 0x9e3779b9,
+         0x9e3779b9, 0x9e3779b9, 0x9e3779b9, 0x9e3779b9) // For uint32
+// For uint64, use 0x9e3779b97f4a7c13 instead
 ```
 
 ## Implementation Details
