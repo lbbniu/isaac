@@ -21,29 +21,53 @@ func New[T uint32 | uint64]() *ISAAC[T] {
 }
 
 // Seed initializes ISAAC
-func (s *ISAAC[T]) Seed(seed T) {
+func (s *ISAAC[T]) Seed(seed T, initValues ...T) {
 	// Use the same initial values as the C version
 	var a, b, c, d, e, f, g, h T
 	switch any(a).(type) {
 	case uint32:
-		a32 := uint32(0x1367df5a)
-		b32 := uint32(0x95d90059)
-		c32 := uint32(0xc3163e4b)
-		d32 := uint32(0x0f421ad8)
-		e32 := uint32(0xd92a4a78)
-		f32 := uint32(0xa51a3c49)
-		g32 := uint32(0xc4efea1b)
-		h32 := uint32(0x30609119)
+		var a32, b32, c32, d32, e32, f32, g32, h32 uint32
+		if len(initValues) >= 8 {
+			a32 = uint32(initValues[0])
+			b32 = uint32(initValues[1])
+			c32 = uint32(initValues[2])
+			d32 = uint32(initValues[3])
+			e32 = uint32(initValues[4])
+			f32 = uint32(initValues[5])
+			g32 = uint32(initValues[6])
+			h32 = uint32(initValues[7])
+		} else {
+			a32 = uint32(0x1367df5a)
+			b32 = uint32(0x95d90059)
+			c32 = uint32(0xc3163e4b)
+			d32 = uint32(0x0f421ad8)
+			e32 = uint32(0xd92a4a78)
+			f32 = uint32(0xa51a3c49)
+			g32 = uint32(0xc4efea1b)
+			h32 = uint32(0x30609119)
+		}
 		a, b, c, d, e, f, g, h = T(a32), T(b32), T(c32), T(d32), T(e32), T(f32), T(g32), T(h32)
 	case uint64:
-		a64 := uint64(0x647c4677a2884b7c)
-		b64 := uint64(0xb9f8b322c73ac862)
-		c64 := uint64(0x8c0ea5053d4712a0)
-		d64 := uint64(0xb29b2e824a595524)
-		e64 := uint64(0x82f053db8355e0ce)
-		f64 := uint64(0x48fe4a0fa5a09315)
-		g64 := uint64(0xae985bf2cbfc89ed)
-		h64 := uint64(0x98f5704f6c44c0ab)
+		var a64, b64, c64, d64, e64, f64, g64, h64 uint64
+		if len(initValues) >= 8 {
+			a64 = uint64(initValues[0])
+			b64 = uint64(initValues[1])
+			c64 = uint64(initValues[2])
+			d64 = uint64(initValues[3])
+			e64 = uint64(initValues[4])
+			f64 = uint64(initValues[5])
+			g64 = uint64(initValues[6])
+			h64 = uint64(initValues[7])
+		} else {
+			a64 = uint64(0x647c4677a2884b7c)
+			b64 = uint64(0xb9f8b322c73ac862)
+			c64 = uint64(0x8c0ea5053d4712a0)
+			d64 = uint64(0xb29b2e824a595524)
+			e64 = uint64(0x82f053db8355e0ce)
+			f64 = uint64(0x48fe4a0fa5a09315)
+			g64 = uint64(0xae985bf2cbfc89ed)
+			h64 = uint64(0x98f5704f6c44c0ab)
+		}
 		a, b, c, d, e, f, g, h = T(a64), T(b64), T(c64), T(d64), T(e64), T(f64), T(g64), T(h64)
 	}
 

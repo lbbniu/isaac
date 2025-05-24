@@ -148,10 +148,65 @@ func NewIsaac32() *Isaac32 {
 	}
 }
 
-func (s *Isaac32) Seed(seed uint32) {
-	s.m = make([]uint32, ISAAC_WORDS)
-	s.m[0] = seed
-	s.isaac_seed()
+// Seed initializes ISAAC32
+func (isaac *Isaac32) Seed(seed uint32, initValues ...uint32) {
+	// Use the same initial values as the C version
+	var a, b, c, d, e, f, g, h uint32
+	if len(initValues) >= 8 {
+		a = initValues[0]
+		b = initValues[1]
+		c = initValues[2]
+		d = initValues[3]
+		e = initValues[4]
+		f = initValues[5]
+		g = initValues[6]
+		h = initValues[7]
+	} else {
+		a = 0x1367df5a
+		b = 0x95d90059
+		c = 0xc3163e4b
+		d = 0x0f421ad8
+		e = 0xd92a4a78
+		f = 0xa51a3c49
+		g = 0xc4efea1b
+		h = 0x30609119
+	}
+
+	// Initialize m array
+	for i := 0; i < ISAAC_WORDS; i++ {
+		isaac.m[i] = 0
+	}
+
+	// Initialize m array with seed
+	isaac.m[0] = seed
+
+	// Mix S->m so that every part of the seed affects every part of the state
+	// Two rounds of mixing
+	for range [2]struct{}{} {
+		for i := 0; i < ISAAC_WORDS; i += 8 {
+			a += isaac.m[i]
+			b += isaac.m[i+1]
+			c += isaac.m[i+2]
+			d += isaac.m[i+3]
+			e += isaac.m[i+4]
+			f += isaac.m[i+5]
+			g += isaac.m[i+6]
+			h += isaac.m[i+7]
+			a, b, c, d, e, f, g, h = mix32(a, b, c, d, e, f, g, h)
+			isaac.m[i] = a
+			isaac.m[i+1] = b
+			isaac.m[i+2] = c
+			isaac.m[i+3] = d
+			isaac.m[i+4] = e
+			isaac.m[i+5] = f
+			isaac.m[i+6] = g
+			isaac.m[i+7] = h
+		}
+	}
+
+	isaac.a = 0
+	isaac.b = 0
+	isaac.c = 0
 }
 
 func (s *Isaac32) Refill(r []uint32) {
