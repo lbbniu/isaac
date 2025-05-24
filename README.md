@@ -27,6 +27,7 @@ package main
 
 import (
     "fmt"
+    
     "github.com/lbbniu/isaac"
 )
 
@@ -55,7 +56,7 @@ rng := isaac.New[uint64]()
 rng := isaac.New[uint32]()
 
 // Seed with a fixed-size array
-var seed [isaac.ISAAC_WORDS]uint32
+var seed [isaac.Words]uint32
 rng.Seed(seed)
 ```
 
@@ -66,7 +67,7 @@ rng.Seed(seed)
 rng := isaac.New[uint32]()
 
 // Get a batch of random numbers
-var result [isaac.ISAAC_WORDS]uint32
+var result [isaac.Words]uint32
 rng.Refill(&result)
 ```
 
