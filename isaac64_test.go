@@ -1,4 +1,4 @@
-package isaac64
+package isaac
 
 import (
 	"encoding/binary"

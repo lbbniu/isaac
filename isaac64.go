@@ -1,4 +1,4 @@
-package isaac64
+package isaac
 
 type UINT64_C = uint64
 
