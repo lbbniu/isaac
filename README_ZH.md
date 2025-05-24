@@ -10,7 +10,7 @@ ISAAC 是一个由 Robert J. Jenkins Jr. 在 1996 年设计的密码学安全的
 - 快速高效
 - 线程安全
 - 无外部依赖
-- 可自定义初始值
+- 使用固定大小数组状态以提高性能
 
 ## 安装
 
@@ -51,24 +51,33 @@ rng := isaac.New[uint64]()
 ### 设置种子
 
 ```go
-// 创建并设置种子的 ISAAC 实例
+// 创建一个新的 ISAAC 实例
 rng := isaac.New[uint32]()
-rng.Seed(12345) // 使用 uint32 值作为种子
 
-// 或者使用自定义初始值
-rng.Seed(12345, 0x9e3779b9, 0x9e3779b9, 0x9e3779b9, 0x9e3779b9,
-         0x9e3779b9, 0x9e3779b9, 0x9e3779b9, 0x9e3779b9) // 用于 uint32
-// 对于 uint64，使用 0x9e3779b97f4a7c13 替代
+// 使用固定大小的数组作为种子
+var seed [isaac.ISAAC_WORDS]uint32
+rng.Seed(seed)
+```
+
+### 批量生成
+
+```go
+// 创建一个新的 ISAAC 实例
+rng := isaac.New[uint32]()
+
+// 获取一批随机数
+var result [isaac.ISAAC_WORDS]uint32
+rng.Refill(&result)
 ```
 
 ## 实现细节
 
 该实现包括：
 
-- `isaac.go` 中的泛型实现
+- `isaac.go` 中的泛型实现，使用固定大小数组状态
 - `isaac32.go` 中的 32 位特定实现
 - `isaac64.go` 中的 64 位特定实现
-- 全面的测试覆盖
+- 使用 GNU Coreutils 的测试向量进行全面测试
 
 ## 安全性
 
