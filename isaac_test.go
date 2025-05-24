@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestIsaac64 用例数据来自 https://github.com/coreutils/coreutils/blob/master/gl/tests/test-rand-isaac.c
+// TestISAAC64 test data from https://github.com/coreutils/coreutils/blob/master/gl/tests/test-rand-isaac.c
 func TestISAAC64(t *testing.T) {
 	testCases := [][ISAAC_WORDS]uint64{
 		{
@@ -287,6 +287,7 @@ func TestISAAC64(t *testing.T) {
 	}
 }
 
+// TestISAAC32 test data from https://github.com/coreutils/coreutils/blob/master/gl/tests/test-rand-isaac.c
 func TestISAAC32(t *testing.T) {
 	testCases := [][ISAAC_WORDS]uint32{
 		{

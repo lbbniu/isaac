@@ -4,10 +4,10 @@ import "math"
 
 type UINT64_C = uint64
 
-// Isaac64 对应 struct isaac_state
+// Isaac64 corresponds to struct isaac_state
 type Isaac64 struct {
-	m [ISAAC_WORDS]uint64 // 状态表
-	r []uint64            // 结果表
+	m [ISAAC_WORDS]uint64 // state table
+	r []uint64            // result table
 	a uint64
 	b uint64
 	c uint64
@@ -18,14 +18,14 @@ func just64(a uint64) uint64 {
 	return a & math.MaxUint64
 }
 
-// ind64 原始C里的宏：ind64(mm, x) = *(ub8*)((ub1*)(mm) + ((x) & ((RANDSIZ-1)<<3)))
-// 解释：对 mm 做"按字节"的偏移，然后再取 64 位整型。
-// 等价于在 Go 中： mm[( (x) & ((RANDSIZ-1)<<3)) >> 3]。
+// ind64 corresponds to the C macro: ind64(mm, x) = *(ub8*)((ub1*)(mm) + ((x) & ((RANDSIZ-1)<<3)))
+// Explanation: Perform byte-level offset on mm, then take 64-bit integer.
+// Equivalent in Go: mm[( (x) & ((RANDSIZ-1)<<3)) >> 3].
 func ind64(m [ISAAC_WORDS]uint64, x uint64) uint64 {
 	return m[(x&((ISAAC_WORDS-1)*8))>>3]
 }
 
-// mix64 对应原始C里的宏 mix64(a,b,c,d,e,f,g,h)
+// mix64 corresponds to the C macro mix64(a,b,c,d,e,f,g,h)
 func mix64(a, b, c, d, e, f, g, h uint64) (na, nb, nc, nd, ne, nf, ng, nh uint64) {
 	a -= e
 	f ^= (just64(h) >> 9)
@@ -54,7 +54,7 @@ func mix64(a, b, c, d, e, f, g, h uint64) (na, nb, nc, nd, ne, nf, ng, nh uint64
 	return a, b, c, d, e, f, g, h
 }
 
-// isaac_refill 对应 C 版本的 isaac_refill 函数
+// isaac_refill corresponds to the C version of isaac_refill function
 func (s *Isaac64) isaac_refill(r *[ISAAC_WORDS]uint64) {
 	a := s.a
 	b := s.b + (s.c + 1)
@@ -62,7 +62,7 @@ func (s *Isaac64) isaac_refill(r *[ISAAC_WORDS]uint64) {
 
 	HALF := ISAAC_WORDS / 2
 
-	// isaac_step 对应 C 语言中的 ISAAC_STEP 宏
+	// isaac_step corresponds to the C ISAAC_STEP macro
 	step := func(i int, off int, mix uint64) {
 		a = (0 ^ mix) + s.m[off+i]
 		x := s.m[i]
@@ -72,7 +72,7 @@ func (s *Isaac64) isaac_refill(r *[ISAAC_WORDS]uint64) {
 		r[i] = b
 	}
 
-	// 前半段
+	// First half
 	for i := 0; i < HALF; i += 4 {
 		// step1: a = ^ (a ^ (a << 21))
 		step(i, HALF, ^(a ^ (a << 21)))
@@ -84,7 +84,7 @@ func (s *Isaac64) isaac_refill(r *[ISAAC_WORDS]uint64) {
 		step(i+3, HALF, a^(just64(a)>>33))
 	}
 
-	// 后半段
+	// Second half
 	for i := HALF; i < ISAAC_WORDS; i += 4 {
 		// step1: a = ^ (a ^ (a << 21))
 		step(i, -HALF, ^(a ^ (a << 21)))
@@ -100,13 +100,13 @@ func (s *Isaac64) isaac_refill(r *[ISAAC_WORDS]uint64) {
 	s.b = b
 }
 
-// NewIsaac64 创建一个 ISAAC64 实例
+// NewIsaac64 creates a new ISAAC64 instance
 func NewIsaac64() *Isaac64 {
 	return &Isaac64{}
 }
 
 // Seed initializes ISAAC64
-// 相当于c语言的 isaac_seed 函数
+// Corresponds to the C isaac_seed function
 func (s *Isaac64) Seed(seed [ISAAC_WORDS]uint64, initValues ...uint64) {
 	if len(initValues) > 0 && len(initValues) != 8 {
 		panic("isaac: need exactly 8 initial values for uint64")

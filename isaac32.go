@@ -4,10 +4,10 @@ import "math"
 
 type UINT32_C = uint32
 
-// Isaac32 对应 struct isaac_state
+// Isaac32 corresponds to struct isaac_state
 type Isaac32 struct {
-	m [ISAAC_WORDS]uint32 // 状态表
-	r []uint32            // 结果表
+	m [ISAAC_WORDS]uint32 // state table
+	r []uint32            // result table
 	a uint32
 	b uint32
 	c uint32
@@ -18,14 +18,14 @@ func just32(a uint32) uint32 {
 	return a & math.MaxUint32
 }
 
-// ind32 原始C里的宏：ind(mm, x) = *(ub4*)((ub1*)(mm) + ((x) & ((RANDSIZ-1)<<2)))
-// 解释：对 mm 做"按字节"的偏移，然后再取 32 位整型。
-// 等价于在 Go 中： mm[( (x) & ((RANDSIZ-1)<<2)) >> 2]。
+// ind32 corresponds to the C macro: ind(mm, x) = *(ub4*)((ub1*)(mm) + ((x) & ((RANDSIZ-1)<<2)))
+// Explanation: Perform byte-level offset on mm, then take 32-bit integer.
+// Equivalent in Go: mm[( (x) & ((RANDSIZ-1)<<2)) >> 2].
 func ind32(m [ISAAC_WORDS]uint32, x uint32) uint32 {
 	return m[(x&((ISAAC_WORDS-1)*4))>>2]
 }
 
-// mix32 对应原始C里的宏 mix(a,b,c,d,e,f,g,h)
+// mix32 corresponds to the C macro mix(a,b,c,d,e,f,g,h)
 func mix32(a, b, c, d, e, f, g, h uint32) (na, nb, nc, nd, ne, nf, ng, nh uint32) {
 	a ^= b << 11
 	d += a
@@ -54,7 +54,7 @@ func mix32(a, b, c, d, e, f, g, h uint32) (na, nb, nc, nd, ne, nf, ng, nh uint32
 	return a, b, c, d, e, f, g, h
 }
 
-// isaac_refill 对应 C 版本的 isaac_refill 函数
+// isaac_refill corresponds to the C version of isaac_refill function
 func (s *Isaac32) isaac_refill(r *[ISAAC_WORDS]uint32) {
 	a := s.a
 	b := s.b + (s.c + 1)
@@ -62,7 +62,7 @@ func (s *Isaac32) isaac_refill(r *[ISAAC_WORDS]uint32) {
 
 	HALF := ISAAC_WORDS / 2
 
-	// isaac_step 对应 C 语言中的 ISAAC_STEP 宏
+	// isaac_step corresponds to the C ISAAC_STEP macro
 	step := func(i int, off int, mix uint32) {
 		a = (a ^ mix) + s.m[off+i]
 		x := s.m[i]
@@ -72,7 +72,7 @@ func (s *Isaac32) isaac_refill(r *[ISAAC_WORDS]uint32) {
 		r[i] = b
 	}
 
-	// 前半段
+	// First half
 	for i := 0; i < HALF; i += 4 {
 		// step1: a = (a << 13)
 		step(i, HALF, a<<13)
@@ -84,7 +84,7 @@ func (s *Isaac32) isaac_refill(r *[ISAAC_WORDS]uint32) {
 		step(i+3, HALF, a>>16)
 	}
 
-	// 后半段
+	// Second half
 	for i := HALF; i < ISAAC_WORDS; i += 4 {
 		// step1: a = (a << 13)
 		step(i, -HALF, a<<13)
@@ -105,7 +105,7 @@ func NewIsaac32() *Isaac32 {
 }
 
 // Seed initializes ISAAC32
-// 相当于c语言的 isaac_seed 函数
+// Corresponds to the C isaac_seed function
 func (isaac *Isaac32) Seed(seed [ISAAC_WORDS]uint32, initValues ...uint32) {
 	if len(initValues) > 0 && len(initValues) != 8 {
 		panic("isaac: need exactly 8 initial values for uint32")
