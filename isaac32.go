@@ -6,8 +6,8 @@ type UINT32_C = uint32
 
 // Isaac32 corresponds to struct isaac_state
 type Isaac32 struct {
-	m [ISAAC_WORDS]uint32 // state table
-	r []uint32            // result table
+	m [Words]uint32 // state table
+	r []uint32      // result table
 	a uint32
 	b uint32
 	c uint32
@@ -21,8 +21,8 @@ func just32(a uint32) uint32 {
 // ind32 corresponds to the C macro: ind(mm, x) = *(ub4*)((ub1*)(mm) + ((x) & ((RANDSIZ-1)<<2)))
 // Explanation: Perform byte-level offset on mm, then take 32-bit integer.
 // Equivalent in Go: mm[( (x) & ((RANDSIZ-1)<<2)) >> 2].
-func ind32(m [ISAAC_WORDS]uint32, x uint32) uint32 {
-	return m[(x&((ISAAC_WORDS-1)*4))>>2]
+func ind32(m [Words]uint32, x uint32) uint32 {
+	return m[(x&((Words-1)*4))>>2]
 }
 
 // mix32 corresponds to the C macro mix(a,b,c,d,e,f,g,h)
@@ -55,12 +55,12 @@ func mix32(a, b, c, d, e, f, g, h uint32) (na, nb, nc, nd, ne, nf, ng, nh uint32
 }
 
 // isaac_refill corresponds to the C version of isaac_refill function
-func (s *Isaac32) isaac_refill(r *[ISAAC_WORDS]uint32) {
+func (s *Isaac32) isaac_refill(r *[Words]uint32) {
 	a := s.a
 	b := s.b + (s.c + 1)
 	s.c++
 
-	HALF := ISAAC_WORDS / 2
+	HALF := Words / 2
 
 	// isaac_step corresponds to the C ISAAC_STEP macro
 	step := func(i int, off int, mix uint32) {
@@ -68,7 +68,7 @@ func (s *Isaac32) isaac_refill(r *[ISAAC_WORDS]uint32) {
 		x := s.m[i]
 		y := ind32(s.m, x) + a + b
 		s.m[i] = y
-		b = just32(ind32(s.m, y>>ISAAC_WORDS_LOG) + x)
+		b = just32(ind32(s.m, y>>WordsLog) + x)
 		r[i] = b
 	}
 
@@ -85,7 +85,7 @@ func (s *Isaac32) isaac_refill(r *[ISAAC_WORDS]uint32) {
 	}
 
 	// Second half
-	for i := HALF; i < ISAAC_WORDS; i += 4 {
+	for i := HALF; i < Words; i += 4 {
 		// step1: a = (a << 13)
 		step(i, -HALF, a<<13)
 		// step2: a = (a >> 6)
@@ -101,12 +101,14 @@ func (s *Isaac32) isaac_refill(r *[ISAAC_WORDS]uint32) {
 }
 
 func NewIsaac32() *Isaac32 {
-	return &Isaac32{}
+	s := &Isaac32{}
+	s.Seed([Words]uint32{})
+	return s
 }
 
 // Seed initializes ISAAC32
 // Corresponds to the C isaac_seed function
-func (isaac *Isaac32) Seed(seed [ISAAC_WORDS]uint32, initValues ...uint32) {
+func (isaac *Isaac32) Seed(seed [Words]uint32, initValues ...uint32) {
 	if len(initValues) > 0 && len(initValues) != 8 {
 		panic("isaac: need exactly 8 initial values for uint32")
 	}
@@ -134,14 +136,14 @@ func (isaac *Isaac32) Seed(seed [ISAAC_WORDS]uint32, initValues ...uint32) {
 	}
 
 	// Initialize m array
-	for i := 0; i < ISAAC_WORDS; i++ {
+	for i := 0; i < Words; i++ {
 		isaac.m[i] = seed[i]
 	}
 
 	// Mix S->m so that every part of the seed affects every part of the state
 	// Two rounds of mixing
 	for range [2]struct{}{} {
-		for i := 0; i < ISAAC_WORDS; i += 8 {
+		for i := 0; i < Words; i += 8 {
 			a += isaac.m[i]
 			b += isaac.m[i+1]
 			c += isaac.m[i+2]
@@ -167,13 +169,13 @@ func (isaac *Isaac32) Seed(seed [ISAAC_WORDS]uint32, initValues ...uint32) {
 	isaac.c = 0
 }
 
-func (s *Isaac32) Refill(r *[ISAAC_WORDS]uint32) {
+func (s *Isaac32) Refill(r *[Words]uint32) {
 	s.isaac_refill(r)
 }
 
 func (s *Isaac32) Uint32() uint32 {
 	if r := s.r; len(r) == 0 {
-		var r [ISAAC_WORDS]uint32
+		var r [Words]uint32
 		s.Refill(&r)
 		s.r = r[:]
 	}

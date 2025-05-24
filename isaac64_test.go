@@ -11,7 +11,7 @@ import (
 
 // TestIsaac64 用例数据来自 https://github.com/coreutils/coreutils/blob/master/gl/tests/test-rand-isaac.c
 func TestIsaac64(t *testing.T) {
-	testCases := [][ISAAC_WORDS]uint64{
+	testCases := [][Words]uint64{
 		{
 			UINT64_C(0x12a8f216af9418c2), UINT64_C(0xd4490ad526f14431),
 			UINT64_C(0xb49c3b3995091a36), UINT64_C(0x5b45e522e4b1b4ef),
@@ -277,10 +277,10 @@ func TestIsaac64(t *testing.T) {
 	// Seed with zeros, and discard the first buffer of output,
 	// as that's what the standard programs do.
 	s := NewIsaac64()
-	var seed [ISAAC_WORDS]uint64
+	var seed [Words]uint64
 	s.Seed(seed)
 
-	var r [ISAAC_WORDS]uint64
+	var r [Words]uint64
 	s.Refill(&r)
 
 	for idx, testCase := range testCases {
@@ -296,25 +296,25 @@ func TestIsaac64(t *testing.T) {
 func TestWxIsaac64(t *testing.T) {
 	s := NewIsaac64()
 	for _, seed := range []uint64{0xffffffffffffffff, 12312312} {
-		var result [ISAAC_WORDS]uint64
-		var seeds [ISAAC_WORDS]uint64
+		var result [Words]uint64
+		var seeds [Words]uint64
 		seeds[0] = seed
 		s.Seed(seeds)
 		s.Refill(&result)
-		keys1 := make([]byte, ISAAC_WORDS*ISAAC_WORDS_LOG)
+		keys1 := make([]byte, Words*WordsLog)
 		for i, r := range result {
-			binary.LittleEndian.PutUint64(keys1[i*ISAAC_WORDS_LOG:], r)
-			fmt.Printf("seed: %d 第 %d 组字节: %v\n", seed, i, keys1[i*ISAAC_WORDS_LOG:i*ISAAC_WORDS_LOG+ISAAC_WORDS_LOG])
+			binary.LittleEndian.PutUint64(keys1[i*WordsLog:], r)
+			fmt.Printf("seed: %d 第 %d 组字节: %v\n", seed, i, keys1[i*WordsLog:i*WordsLog+WordsLog])
 		}
 		slices.Reverse(keys1)
 
 		s.Seed(seeds)
 		s.Refill(&result)
 		slices.Reverse(result[:])
-		keys2 := make([]byte, ISAAC_WORDS*ISAAC_WORDS_LOG)
+		keys2 := make([]byte, Words*WordsLog)
 		for i, r := range result {
-			binary.BigEndian.PutUint64(keys2[i*ISAAC_WORDS_LOG:], r)
-			fmt.Printf("seed: %d 第 %d 组字节: %v\n", seed, i, keys2[i*ISAAC_WORDS_LOG:i*ISAAC_WORDS_LOG+ISAAC_WORDS_LOG])
+			binary.BigEndian.PutUint64(keys2[i*WordsLog:], r)
+			fmt.Printf("seed: %d 第 %d 组字节: %v\n", seed, i, keys2[i*WordsLog:i*WordsLog+WordsLog])
 		}
 		require.Equal(t, keys1, keys2)
 	}

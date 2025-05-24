@@ -9,7 +9,7 @@ import (
 
 // TestISAAC64 test data from https://github.com/coreutils/coreutils/blob/master/gl/tests/test-rand-isaac.c
 func TestISAAC64(t *testing.T) {
-	testCases := [][ISAAC_WORDS]uint64{
+	testCases := [][Words]uint64{
 		{
 			UINT64_C(0x12a8f216af9418c2), UINT64_C(0xd4490ad526f14431),
 			UINT64_C(0xb49c3b3995091a36), UINT64_C(0x5b45e522e4b1b4ef),
@@ -273,10 +273,10 @@ func TestISAAC64(t *testing.T) {
 	}
 
 	s := New[uint64]()
-	var seed [ISAAC_WORDS]uint64
+	var seed [Words]uint64
 	s.Seed(seed)
 
-	var r [ISAAC_WORDS]uint64
+	var r [Words]uint64
 	s.Refill(&r)
 
 	for idx, testCase := range testCases {
@@ -289,7 +289,7 @@ func TestISAAC64(t *testing.T) {
 
 // TestISAAC32 test data from https://github.com/coreutils/coreutils/blob/master/gl/tests/test-rand-isaac.c
 func TestISAAC32(t *testing.T) {
-	testCases := [][ISAAC_WORDS]uint32{
+	testCases := [][Words]uint32{
 		{
 			UINT32_C(0xf650e4c8), UINT32_C(0xe448e96d),
 			UINT32_C(0x98db2fb4), UINT32_C(0xf5fad54f),
@@ -553,10 +553,10 @@ func TestISAAC32(t *testing.T) {
 	}
 
 	s := New[uint32]()
-	var seed [ISAAC_WORDS]uint32
+	var seed [Words]uint32
 	s.Seed(seed)
 
-	var r [ISAAC_WORDS]uint32
+	var r [Words]uint32
 	s.Refill(&r)
 
 	for idx, testCase := range testCases {

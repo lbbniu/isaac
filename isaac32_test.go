@@ -8,7 +8,7 @@ import (
 )
 
 func TestIsaac32(t *testing.T) {
-	testCases := [][ISAAC_WORDS]uint32{
+	testCases := [][Words]uint32{
 		{
 			UINT32_C(0xf650e4c8), UINT32_C(0xe448e96d),
 			UINT32_C(0x98db2fb4), UINT32_C(0xf5fad54f),
@@ -272,10 +272,10 @@ func TestIsaac32(t *testing.T) {
 	}
 
 	s := NewIsaac32()
-	var seed [ISAAC_WORDS]uint32
+	var seed [Words]uint32
 	s.Seed(seed)
 
-	var r [ISAAC_WORDS]uint32
+	var r [Words]uint32
 	s.Refill(&r)
 
 	for idx, testCase := range testCases {

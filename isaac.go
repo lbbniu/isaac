@@ -6,14 +6,14 @@ import (
 
 // 常量定义，对齐 C 版本
 const (
-	ISAAC_BITS      = 64
-	ISAAC_WORDS     = 1 << 8
-	ISAAC_WORDS_LOG = 8
+	Bits     = 64
+	Words    = 1 << 8
+	WordsLog = 8
 )
 
 // ISAAC struct using generic type
 type ISAAC[T uint32 | uint64] struct {
-	m [ISAAC_WORDS]T
+	m [Words]T
 	r []T
 	a T
 	b T
@@ -23,11 +23,12 @@ type ISAAC[T uint32 | uint64] struct {
 // New creates a new ISAAC instance
 func New[T uint32 | uint64]() *ISAAC[T] {
 	var s ISAAC[T]
+	s.Seed([Words]T{})
 	return &s
 }
 
 // Seed initializes ISAAC
-func (s *ISAAC[T]) Seed(seed [ISAAC_WORDS]T, initValues ...T) {
+func (s *ISAAC[T]) Seed(seed [Words]T, initValues ...T) {
 	if len(initValues) > 0 && len(initValues) != 8 {
 		panic("isaac: need exactly 8 initial values")
 	}
@@ -82,14 +83,14 @@ func (s *ISAAC[T]) Seed(seed [ISAAC_WORDS]T, initValues ...T) {
 	}
 
 	// Initialize m array
-	for i := 0; i < ISAAC_WORDS; i++ {
+	for i := 0; i < Words; i++ {
 		s.m[i] = seed[i]
 	}
 
 	// Mix S->m so that every part of the seed affects every part of the state
 	// Two rounds of mixing
 	for range [2]struct{}{} {
-		for i := 0; i < ISAAC_WORDS; i += 8 {
+		for i := 0; i < Words; i += 8 {
 			a += s.m[i]
 			b += s.m[i+1]
 			c += s.m[i+2]
@@ -116,12 +117,12 @@ func (s *ISAAC[T]) Seed(seed [ISAAC_WORDS]T, initValues ...T) {
 }
 
 // Refill replenishes the random number array
-func (s *ISAAC[T]) Refill(r *[ISAAC_WORDS]T) {
+func (s *ISAAC[T]) Refill(r *[Words]T) {
 	a := s.a
 	b := s.b + (s.c + 1)
 	s.c++
 
-	HALF := ISAAC_WORDS / 2
+	HALF := Words / 2
 
 	// isaac_step corresponds to the ISAAC_STEP macro in C
 	step := func(i int, off int, mix T) {
@@ -134,7 +135,7 @@ func (s *ISAAC[T]) Refill(r *[ISAAC_WORDS]T) {
 		x := s.m[i]
 		y := ind(s.m, x) + a + b
 		s.m[i] = y
-		b = just(ind(s.m, y>>ISAAC_WORDS_LOG) + x)
+		b = just(ind(s.m, y>>WordsLog) + x)
 		r[i] = b
 	}
 
@@ -164,7 +165,7 @@ func (s *ISAAC[T]) Refill(r *[ISAAC_WORDS]T) {
 	}
 
 	// Second half
-	for i := HALF; i < ISAAC_WORDS; i += 4 {
+	for i := HALF; i < Words; i += 4 {
 		switch any(a).(type) {
 		case uint32:
 			// step1: a = (a << 13)
@@ -195,7 +196,7 @@ func (s *ISAAC[T]) Refill(r *[ISAAC_WORDS]T) {
 // Rand returns the next random number
 func (s *ISAAC[T]) Rand() T {
 	if len(s.r) == 0 {
-		var r [ISAAC_WORDS]T
+		var r [Words]T
 		s.Refill(&r)
 		s.r = r[:]
 	}
@@ -205,7 +206,7 @@ func (s *ISAAC[T]) Rand() T {
 }
 
 // Generic implementation of ind function
-func ind[T uint32 | uint64](m [ISAAC_WORDS]T, x T) T {
+func ind[T uint32 | uint64](m [Words]T, x T) T {
 	var shift T
 	switch any(x).(type) {
 	case uint32:
@@ -213,7 +214,7 @@ func ind[T uint32 | uint64](m [ISAAC_WORDS]T, x T) T {
 	case uint64:
 		shift = 3
 	}
-	return m[(x&((ISAAC_WORDS-1)<<shift))>>shift]
+	return m[(x&((Words-1)<<shift))>>shift]
 }
 
 // Generic implementation of just function

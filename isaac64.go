@@ -6,8 +6,8 @@ type UINT64_C = uint64
 
 // Isaac64 corresponds to struct isaac_state
 type Isaac64 struct {
-	m [ISAAC_WORDS]uint64 // state table
-	r []uint64            // result table
+	m [Words]uint64 // state table
+	r []uint64      // result table
 	a uint64
 	b uint64
 	c uint64
@@ -21,8 +21,8 @@ func just64(a uint64) uint64 {
 // ind64 corresponds to the C macro: ind64(mm, x) = *(ub8*)((ub1*)(mm) + ((x) & ((RANDSIZ-1)<<3)))
 // Explanation: Perform byte-level offset on mm, then take 64-bit integer.
 // Equivalent in Go: mm[( (x) & ((RANDSIZ-1)<<3)) >> 3].
-func ind64(m [ISAAC_WORDS]uint64, x uint64) uint64 {
-	return m[(x&((ISAAC_WORDS-1)*8))>>3]
+func ind64(m [Words]uint64, x uint64) uint64 {
+	return m[(x&((Words-1)*8))>>3]
 }
 
 // mix64 corresponds to the C macro mix64(a,b,c,d,e,f,g,h)
@@ -55,12 +55,12 @@ func mix64(a, b, c, d, e, f, g, h uint64) (na, nb, nc, nd, ne, nf, ng, nh uint64
 }
 
 // isaac_refill corresponds to the C version of isaac_refill function
-func (s *Isaac64) isaac_refill(r *[ISAAC_WORDS]uint64) {
+func (s *Isaac64) isaac_refill(r *[Words]uint64) {
 	a := s.a
 	b := s.b + (s.c + 1)
 	s.c++
 
-	HALF := ISAAC_WORDS / 2
+	HALF := Words / 2
 
 	// isaac_step corresponds to the C ISAAC_STEP macro
 	step := func(i int, off int, mix uint64) {
@@ -68,7 +68,7 @@ func (s *Isaac64) isaac_refill(r *[ISAAC_WORDS]uint64) {
 		x := s.m[i]
 		y := ind64(s.m, x) + a + b
 		s.m[i] = y
-		b = just64(ind64(s.m, y>>ISAAC_WORDS_LOG) + x)
+		b = just64(ind64(s.m, y>>WordsLog) + x)
 		r[i] = b
 	}
 
@@ -85,7 +85,7 @@ func (s *Isaac64) isaac_refill(r *[ISAAC_WORDS]uint64) {
 	}
 
 	// Second half
-	for i := HALF; i < ISAAC_WORDS; i += 4 {
+	for i := HALF; i < Words; i += 4 {
 		// step1: a = ^ (a ^ (a << 21))
 		step(i, -HALF, ^(a ^ (a << 21)))
 		// step2: a = a ^ (just (a) >>  5)
@@ -102,12 +102,14 @@ func (s *Isaac64) isaac_refill(r *[ISAAC_WORDS]uint64) {
 
 // NewIsaac64 creates a new ISAAC64 instance
 func NewIsaac64() *Isaac64 {
-	return &Isaac64{}
+	s := &Isaac64{}
+	s.Seed([Words]uint64{})
+	return s
 }
 
 // Seed initializes ISAAC64
 // Corresponds to the C isaac_seed function
-func (s *Isaac64) Seed(seed [ISAAC_WORDS]uint64, initValues ...uint64) {
+func (s *Isaac64) Seed(seed [Words]uint64, initValues ...uint64) {
 	if len(initValues) > 0 && len(initValues) != 8 {
 		panic("isaac: need exactly 8 initial values for uint64")
 	}
@@ -135,14 +137,14 @@ func (s *Isaac64) Seed(seed [ISAAC_WORDS]uint64, initValues ...uint64) {
 	}
 
 	// Initialize m array
-	for i := 0; i < ISAAC_WORDS; i++ {
+	for i := 0; i < Words; i++ {
 		s.m[i] = seed[i]
 	}
 
 	// Mix S->m so that every part of the seed affects every part of the state
 	// Two rounds of mixing
 	for range [2]struct{}{} {
-		for i := 0; i < ISAAC_WORDS; i += 8 {
+		for i := 0; i < Words; i += 8 {
 			a += s.m[i]
 			b += s.m[i+1]
 			c += s.m[i+2]
@@ -168,13 +170,13 @@ func (s *Isaac64) Seed(seed [ISAAC_WORDS]uint64, initValues ...uint64) {
 	s.c = 0
 }
 
-func (s *Isaac64) Refill(r *[ISAAC_WORDS]uint64) {
+func (s *Isaac64) Refill(r *[Words]uint64) {
 	s.isaac_refill(r)
 }
 
 func (s *Isaac64) Uint64() uint64 {
 	if r := s.r; len(r) == 0 {
-		var r [ISAAC_WORDS]uint64
+		var r [Words]uint64
 		s.Refill(&r)
 		s.r = r[:]
 	}
