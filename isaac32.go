@@ -1,16 +1,20 @@
 package isaac
 
-import "math"
+import (
+	"math"
+	"sync"
+)
 
 type UINT32_C = uint32
 
-// Isaac32 corresponds to struct isaac_state
-type Isaac32 struct {
-	m [Words]uint32 // state table
-	r []uint32      // result table
-	a uint32
-	b uint32
-	c uint32
+// ISAAC32 struct for 32-bit implementation
+type ISAAC32 struct {
+	m  [Words]uint32 // state table
+	r  []uint32      // result table
+	a  uint32
+	b  uint32
+	c  uint32
+	mu sync.Mutex // mutex for concurrency safety
 }
 
 func just32(a uint32) uint32 {
@@ -55,7 +59,7 @@ func mix32(a, b, c, d, e, f, g, h uint32) (na, nb, nc, nd, ne, nf, ng, nh uint32
 }
 
 // isaac_refill corresponds to the C version of isaac_refill function
-func (s *Isaac32) isaac_refill(r *[Words]uint32) {
+func (s *ISAAC32) isaac_refill(r *[Words]uint32) {
 	a := s.a
 	b := s.b + (s.c + 1)
 	s.c++
@@ -100,17 +104,21 @@ func (s *Isaac32) isaac_refill(r *[Words]uint32) {
 	s.b = b
 }
 
-func NewIsaac32() *Isaac32 {
-	s := &Isaac32{}
+// New32 creates a new ISAAC32 instance
+func New32() *ISAAC32 {
+	var s ISAAC32
 	s.Seed([Words]uint32{})
-	return s
+	return &s
 }
 
 // Seed initializes ISAAC32
 // Corresponds to the C isaac_seed function
-func (isaac *Isaac32) Seed(seed [Words]uint32, initValues ...uint32) {
+func (s *ISAAC32) Seed(seed [Words]uint32, initValues ...uint32) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if len(initValues) > 0 && len(initValues) != 8 {
-		panic("isaac: need exactly 8 initial values for uint32")
+		panic("isaac: need exactly 8 initial values")
 	}
 
 	// Use the same initial values as the C version
@@ -137,49 +145,57 @@ func (isaac *Isaac32) Seed(seed [Words]uint32, initValues ...uint32) {
 
 	// Initialize m array
 	for i := 0; i < Words; i++ {
-		isaac.m[i] = seed[i]
+		s.m[i] = seed[i]
 	}
 
 	// Mix S->m so that every part of the seed affects every part of the state
 	// Two rounds of mixing
 	for range [2]struct{}{} {
 		for i := 0; i < Words; i += 8 {
-			a += isaac.m[i]
-			b += isaac.m[i+1]
-			c += isaac.m[i+2]
-			d += isaac.m[i+3]
-			e += isaac.m[i+4]
-			f += isaac.m[i+5]
-			g += isaac.m[i+6]
-			h += isaac.m[i+7]
+			a += s.m[i]
+			b += s.m[i+1]
+			c += s.m[i+2]
+			d += s.m[i+3]
+			e += s.m[i+4]
+			f += s.m[i+5]
+			g += s.m[i+6]
+			h += s.m[i+7]
 			a, b, c, d, e, f, g, h = mix32(a, b, c, d, e, f, g, h)
-			isaac.m[i] = a
-			isaac.m[i+1] = b
-			isaac.m[i+2] = c
-			isaac.m[i+3] = d
-			isaac.m[i+4] = e
-			isaac.m[i+5] = f
-			isaac.m[i+6] = g
-			isaac.m[i+7] = h
+			s.m[i] = a
+			s.m[i+1] = b
+			s.m[i+2] = c
+			s.m[i+3] = d
+			s.m[i+4] = e
+			s.m[i+5] = f
+			s.m[i+6] = g
+			s.m[i+7] = h
 		}
 	}
 
-	isaac.a = 0
-	isaac.b = 0
-	isaac.c = 0
+	s.a = 0
+	s.b = 0
+	s.c = 0
 }
 
-func (s *Isaac32) Refill(r *[Words]uint32) {
+// Refill replenishes the random number array
+func (s *ISAAC32) Refill(r *[Words]uint32) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	s.isaac_refill(r)
 }
 
-func (s *Isaac32) Uint32() uint32 {
-	if r := s.r; len(r) == 0 {
+// Rand returns the next random number
+func (s *ISAAC32) Rand() uint32 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if len(s.r) == 0 {
 		var r [Words]uint32
 		s.Refill(&r)
 		s.r = r[:]
 	}
-	r := s.r[0]
+	result := s.r[0]
 	s.r = s.r[1:]
-	return r
+	return result
 }

@@ -1,16 +1,20 @@
 package isaac
 
-import "math"
+import (
+	"math"
+	"sync"
+)
 
 type UINT64_C = uint64
 
-// Isaac64 corresponds to struct isaac_state
-type Isaac64 struct {
-	m [Words]uint64 // state table
-	r []uint64      // result table
-	a uint64
-	b uint64
-	c uint64
+// ISAAC64 struct for 64-bit implementation
+type ISAAC64 struct {
+	m  [Words]uint64 // state table
+	r  []uint64      // result table
+	a  uint64
+	b  uint64
+	c  uint64
+	mu sync.Mutex // mutex for concurrency safety
 }
 
 func just64(a uint64) uint64 {
@@ -55,7 +59,10 @@ func mix64(a, b, c, d, e, f, g, h uint64) (na, nb, nc, nd, ne, nf, ng, nh uint64
 }
 
 // isaac_refill corresponds to the C version of isaac_refill function
-func (s *Isaac64) isaac_refill(r *[Words]uint64) {
+func (s *ISAAC64) isaac_refill(r *[Words]uint64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	a := s.a
 	b := s.b + (s.c + 1)
 	s.c++
@@ -100,18 +107,21 @@ func (s *Isaac64) isaac_refill(r *[Words]uint64) {
 	s.b = b
 }
 
-// NewIsaac64 creates a new ISAAC64 instance
-func NewIsaac64() *Isaac64 {
-	s := &Isaac64{}
+// New64 creates a new ISAAC64 instance
+func New64() *ISAAC64 {
+	var s ISAAC64
 	s.Seed([Words]uint64{})
-	return s
+	return &s
 }
 
 // Seed initializes ISAAC64
 // Corresponds to the C isaac_seed function
-func (s *Isaac64) Seed(seed [Words]uint64, initValues ...uint64) {
+func (s *ISAAC64) Seed(seed [Words]uint64, initValues ...uint64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if len(initValues) > 0 && len(initValues) != 8 {
-		panic("isaac: need exactly 8 initial values for uint64")
+		panic("isaac: need exactly 8 initial values")
 	}
 
 	// Use the same initial values as the C version
@@ -170,17 +180,22 @@ func (s *Isaac64) Seed(seed [Words]uint64, initValues ...uint64) {
 	s.c = 0
 }
 
-func (s *Isaac64) Refill(r *[Words]uint64) {
+// Refill replenishes the random number array
+func (s *ISAAC64) Refill(r *[Words]uint64) {
 	s.isaac_refill(r)
 }
 
-func (s *Isaac64) Uint64() uint64 {
-	if r := s.r; len(r) == 0 {
+// Rand returns the next random number
+func (s *ISAAC64) Rand() uint64 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if len(s.r) == 0 {
 		var r [Words]uint64
 		s.Refill(&r)
 		s.r = r[:]
 	}
-	r := s.r[0]
+	result := s.r[0]
 	s.r = s.r[1:]
-	return r
+	return result
 }

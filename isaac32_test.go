@@ -271,7 +271,7 @@ func TestIsaac32(t *testing.T) {
 		},
 	}
 
-	s := NewIsaac32()
+	s := New32()
 	var seed [Words]uint32
 	s.Seed(seed)
 

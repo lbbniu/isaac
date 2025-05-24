@@ -276,7 +276,7 @@ func TestIsaac64(t *testing.T) {
 
 	// Seed with zeros, and discard the first buffer of output,
 	// as that's what the standard programs do.
-	s := NewIsaac64()
+	s := New64()
 	var seed [Words]uint64
 	s.Seed(seed)
 
@@ -294,7 +294,7 @@ func TestIsaac64(t *testing.T) {
 // TestWxIsaac64 测试不同 seed 的输出是否一致,
 // 参考 https://www.aynakeya.com/articles/ctf/reverse-encryption-algorithm-by-osint-wxisaac64/
 func TestWxIsaac64(t *testing.T) {
-	s := NewIsaac64()
+	s := New64()
 	for _, seed := range []uint64{0xffffffffffffffff, 12312312} {
 		var result [Words]uint64
 		var seeds [Words]uint64

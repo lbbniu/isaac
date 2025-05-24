@@ -3,9 +3,10 @@ package isaac
 
 import (
 	"math"
+	"sync"
 )
 
-// 常量定义，对齐 C 版本
+// Constants aligned with C version
 const (
 	// Bits     = 64
 	Words    = 1 << 8
@@ -14,11 +15,12 @@ const (
 
 // ISAAC struct using generic type
 type ISAAC[T uint32 | uint64] struct {
-	m [Words]T
-	r []T
-	a T
-	b T
-	c T
+	m  [Words]T
+	r  []T
+	a  T
+	b  T
+	c  T
+	mu sync.Mutex // mutex for concurrency safety
 }
 
 // New creates a new ISAAC instance
@@ -30,6 +32,9 @@ func New[T uint32 | uint64]() *ISAAC[T] {
 
 // Seed initializes ISAAC
 func (s *ISAAC[T]) Seed(seed [Words]T, initValues ...T) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if len(initValues) > 0 && len(initValues) != 8 {
 		panic("isaac: need exactly 8 initial values")
 	}
@@ -119,6 +124,9 @@ func (s *ISAAC[T]) Seed(seed [Words]T, initValues ...T) {
 
 // Refill replenishes the random number array
 func (s *ISAAC[T]) Refill(r *[Words]T) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	a := s.a
 	b := s.b + (s.c + 1)
 	s.c++
@@ -195,6 +203,9 @@ func (s *ISAAC[T]) Refill(r *[Words]T) {
 
 // Rand returns the next random number
 func (s *ISAAC[T]) Rand() T {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if len(s.r) == 0 {
 		var r [Words]T
 		s.Refill(&r)
