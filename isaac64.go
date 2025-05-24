@@ -152,9 +152,6 @@ func (s *Isaac64) isaac_seed() {
 func NewIsaac64() *Isaac64 {
 	return &Isaac64{
 		m: make([]uint64, ISAAC_WORDS),
-		a: 0,
-		b: 0,
-		c: 0,
 	}
 }
 

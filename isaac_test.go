@@ -1,16 +1,14 @@
 package isaac
 
 import (
-	"encoding/binary"
 	"fmt"
-	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
 // TestIsaac64 用例数据来自 https://github.com/coreutils/coreutils/blob/master/gl/tests/test-rand-isaac.c
-func TestIsaac64(t *testing.T) {
+func TestISAAC64(t *testing.T) {
 	testCases := [][]uint64{
 		{
 			UINT64_C(0x12a8f216af9418c2), UINT64_C(0xd4490ad526f14431),
@@ -288,29 +286,288 @@ func TestIsaac64(t *testing.T) {
 	}
 }
 
-// TestWxIsaac64 测试不同 seed 的输出是否一致,
-// 参考 https://www.aynakeya.com/articles/ctf/reverse-encryption-algorithm-by-osint-wxisaac64/
-func TestWxIsaac64(t *testing.T) {
-	s := NewIsaac64()
-	for _, seed := range []uint64{0xffffffffffffffff, 12312312} {
-		result := make([]uint64, ISAAC_WORDS)
-		s.Seed(seed)
-		s.Refill(result)
-		keys1 := make([]byte, ISAAC_WORDS*ISAAC_WORDS_LOG)
-		for i, r := range result {
-			binary.LittleEndian.PutUint64(keys1[i*ISAAC_WORDS_LOG:], r)
-			fmt.Printf("seed: %d 第 %d 组字节: %v\n", seed, i, keys1[i*ISAAC_WORDS_LOG:i*ISAAC_WORDS_LOG+ISAAC_WORDS_LOG])
-		}
-		slices.Reverse(keys1)
+func TestISAAC32(t *testing.T) {
+	testCases := [][]uint32{
+		{
+			UINT32_C(0xf650e4c8), UINT32_C(0xe448e96d),
+			UINT32_C(0x98db2fb4), UINT32_C(0xf5fad54f),
+			UINT32_C(0x433f1afb), UINT32_C(0xedec154a),
+			UINT32_C(0xd8370487), UINT32_C(0x46ca4f9a),
+			UINT32_C(0x5de3743e), UINT32_C(0x88381097),
+			UINT32_C(0xf1d444eb), UINT32_C(0x823cedb6),
+			UINT32_C(0x6a83e1e0), UINT32_C(0x4a5f6355),
+			UINT32_C(0xc7442433), UINT32_C(0x25890e2e),
+			UINT32_C(0x7452e319), UINT32_C(0x57161df6),
+			UINT32_C(0x38a824f3), UINT32_C(0x002ed713),
+			UINT32_C(0x29f55449), UINT32_C(0x51c08d83),
+			UINT32_C(0xd78cb99e), UINT32_C(0xa0cc74f3),
+			UINT32_C(0x8f651659), UINT32_C(0xcbc8b7c2),
+			UINT32_C(0xf5f71c69), UINT32_C(0x12ad6419),
+			UINT32_C(0xe5792e1b), UINT32_C(0x860536b8),
+			UINT32_C(0x09b3ce98), UINT32_C(0xd45d6d81),
+			UINT32_C(0xf3b26129), UINT32_C(0x17e38f85),
+			UINT32_C(0x29cf72ce), UINT32_C(0x349947b0),
+			UINT32_C(0xc998f9ff), UINT32_C(0xb5e13dae),
+			UINT32_C(0x32ae2a2b), UINT32_C(0xf7cf814c),
+			UINT32_C(0x8ebfa303), UINT32_C(0xcf22e064),
+			UINT32_C(0x0b923200), UINT32_C(0xeca4d58a),
+			UINT32_C(0xef53cec4), UINT32_C(0xd0f7b37d),
+			UINT32_C(0x9c411a2a), UINT32_C(0xffdf8a80),
+			UINT32_C(0xb40e27bc), UINT32_C(0xb4d2f976),
+			UINT32_C(0x44b89b08), UINT32_C(0xf37c71d5),
+			UINT32_C(0x1a70e7e9), UINT32_C(0x0bdb9c30),
+			UINT32_C(0x60dc5207), UINT32_C(0xb3c3f24b),
+			UINT32_C(0xd7386806), UINT32_C(0x229749b5),
+			UINT32_C(0x4e232cd0), UINT32_C(0x91dabc65),
+			UINT32_C(0xa70e1101), UINT32_C(0x8b87437e),
+			UINT32_C(0x5781414f), UINT32_C(0xcdbc62e2),
+			UINT32_C(0x8107c9ff), UINT32_C(0x69d2e4ae),
+			UINT32_C(0x3b18e752), UINT32_C(0xb143b688),
+			UINT32_C(0x6f4e0772), UINT32_C(0x95138769),
+			UINT32_C(0x943c3c74), UINT32_C(0xafc17a97),
+			UINT32_C(0x0fd43963), UINT32_C(0x6a529b0b),
+			UINT32_C(0xd8c58a6a), UINT32_C(0xa8bcc22d),
+			UINT32_C(0x2db35dfe), UINT32_C(0xa7a2f402),
+			UINT32_C(0x6cb167db), UINT32_C(0x538e1f4e),
+			UINT32_C(0x7275e277), UINT32_C(0x1d3b8e97),
+			UINT32_C(0xecc5dc91), UINT32_C(0x15e3a5b9),
+			UINT32_C(0x03696614), UINT32_C(0x30ab93ec),
+			UINT32_C(0xac9fe69d), UINT32_C(0x7bc76811),
+			UINT32_C(0x60eda8da), UINT32_C(0x28833522),
+			UINT32_C(0xd5295ebc), UINT32_C(0x5adb60e7),
+			UINT32_C(0xf7e1cdd0), UINT32_C(0x97166d14),
+			UINT32_C(0xb67ec13a), UINT32_C(0x210f3925),
+			UINT32_C(0x64af0fef), UINT32_C(0x0d028684),
+			UINT32_C(0x3aea3dec), UINT32_C(0xb058bafb),
+			UINT32_C(0xb8b0ccfc), UINT32_C(0xf2b5cc05),
+			UINT32_C(0xe3a662d9), UINT32_C(0x814bc24c),
+			UINT32_C(0x2364a1aa), UINT32_C(0x37c0ed05),
+			UINT32_C(0x2b36505c), UINT32_C(0x451e7ec8),
+			UINT32_C(0x5d2a542f), UINT32_C(0xe43d0fbb),
+			UINT32_C(0x91c8d925), UINT32_C(0x60d4d5f8),
+			UINT32_C(0x12a0594b), UINT32_C(0x9e8a51da),
+			UINT32_C(0xcd49ebdb), UINT32_C(0x1b0dcdc1),
+			UINT32_C(0xcd57c7f7), UINT32_C(0xe6344451),
+			UINT32_C(0x7ded386f), UINT32_C(0x2f36fa86),
+			UINT32_C(0xa6d12101), UINT32_C(0x33bc405d),
+			UINT32_C(0xb388d96c), UINT32_C(0xdb6dbe96),
+			UINT32_C(0xfe29661c), UINT32_C(0x13edc0cb),
+			UINT32_C(0xcb0eee4a), UINT32_C(0x70cc94ae),
+			UINT32_C(0xde11ed34), UINT32_C(0x0606cf9f),
+			UINT32_C(0x3a6ce389), UINT32_C(0x23d74f4e),
+			UINT32_C(0xa37f63ff), UINT32_C(0x917bdec2),
+			UINT32_C(0xd73f72d4), UINT32_C(0x0e7e0e67),
+			UINT32_C(0x3d77d9a2), UINT32_C(0x13add922),
+			UINT32_C(0x8891b3db), UINT32_C(0x01a9bd70),
+			UINT32_C(0x56a001e3), UINT32_C(0xd51f093d),
+			UINT32_C(0xcc033ce3), UINT32_C(0x5ad0d3b0),
+			UINT32_C(0x34105a8c), UINT32_C(0x6a123f57),
+			UINT32_C(0xbd2e5024), UINT32_C(0x7364944b),
+			UINT32_C(0xe89b1a3b), UINT32_C(0x21835c4d),
+			UINT32_C(0x9f39e2d9), UINT32_C(0xd405ded8),
+			UINT32_C(0x294d37e5), UINT32_C(0xbccaaeed),
+			UINT32_C(0x35a124b5), UINT32_C(0x6708a2bc),
+			UINT32_C(0xb00960ba), UINT32_C(0x2a98121a),
+			UINT32_C(0x4d8fae82), UINT32_C(0x0bb3263f),
+			UINT32_C(0x12595a19), UINT32_C(0x6a107589),
+			UINT32_C(0x0809e494), UINT32_C(0x21c171ec),
+			UINT32_C(0x884d6825), UINT32_C(0x14c8009b),
+			UINT32_C(0xb0b84e7b), UINT32_C(0x03fb88f4),
+			UINT32_C(0x28e7cb78), UINT32_C(0x9388b13b),
+			UINT32_C(0xdd2dc1d5), UINT32_C(0x848f520a),
+			UINT32_C(0x07c28cd1), UINT32_C(0x68a39358),
+			UINT32_C(0x72c9137d), UINT32_C(0x127dd430),
+			UINT32_C(0xc613f157), UINT32_C(0x8c2f0d55),
+			UINT32_C(0xf7d3f39f), UINT32_C(0x309bfb78),
+			UINT32_C(0x8406b137), UINT32_C(0x46c0a6f5),
+			UINT32_C(0x3718d597), UINT32_C(0x08607f04),
+			UINT32_C(0x76904b6d), UINT32_C(0x04db4e13),
+			UINT32_C(0xcd7411a7), UINT32_C(0xb510ce0e),
+			UINT32_C(0xbfc7f7cc), UINT32_C(0xb83f957a),
+			UINT32_C(0xfdfef62d), UINT32_C(0xc35e4580),
+			UINT32_C(0x3ff1e524), UINT32_C(0x4112d96c),
+			UINT32_C(0x02c9b944), UINT32_C(0xd5990dfb),
+			UINT32_C(0xe7e26581), UINT32_C(0x0d9c7e7e),
+			UINT32_C(0x826dfa89), UINT32_C(0x66f1e0ab),
+			UINT32_C(0x30bcc764), UINT32_C(0xeadebeac),
+			UINT32_C(0xed35e5ee), UINT32_C(0x0c571a7d),
+			UINT32_C(0xe4f3a26a), UINT32_C(0xf7f58f7b),
+			UINT32_C(0xadf6bc23), UINT32_C(0x5d023e65),
+			UINT32_C(0x1ed3ff4e), UINT32_C(0xec46b0b6),
+			UINT32_C(0xd2a93b51), UINT32_C(0xe75b41c9),
+			UINT32_C(0x7e315aeb), UINT32_C(0x61119a5a),
+			UINT32_C(0x53245b79), UINT32_C(0x33f6d7b1),
+			UINT32_C(0xcae8deba), UINT32_C(0x50fc8194),
+			UINT32_C(0xafa92a6d), UINT32_C(0xc87c8006),
+			UINT32_C(0x4188bfcd), UINT32_C(0x8bace62e),
+			UINT32_C(0x78ffa568), UINT32_C(0x5597ec0f),
+			UINT32_C(0xb4415f7d), UINT32_C(0x08294766),
+			UINT32_C(0xad567643), UINT32_C(0x09c36f90),
+			UINT32_C(0x3dde9f39), UINT32_C(0x4a0a283c),
+			UINT32_C(0x18080c8e), UINT32_C(0x080c79ec),
+			UINT32_C(0x79ae4c10), UINT32_C(0xcb9e1563),
+			UINT32_C(0x7cdd662f), UINT32_C(0x62d31911),
+			UINT32_C(0xa4ca0cf1), UINT32_C(0x5cf824cd),
+			UINT32_C(0x3b708f99), UINT32_C(0x1e16614c),
+			UINT32_C(0xb6b9d766), UINT32_C(0x5de87abb),
+			UINT32_C(0x7229ea81), UINT32_C(0xd5b2d750),
+			UINT32_C(0x56e6cd21), UINT32_C(0xfe1e42d5),
+			UINT32_C(0x96da2655), UINT32_C(0xc2b9aa36),
+			UINT32_C(0xb8f6fd4a), UINT32_C(0x6a158d10),
+			UINT32_C(0x01913fd3), UINT32_C(0xaf7d1fb8),
+			UINT32_C(0x0b5e435f), UINT32_C(0x90c10757),
+			UINT32_C(0x6554abda), UINT32_C(0x7a68710f),
+		},
+		{
+			UINT32_C(0x82ac484f), UINT32_C(0xd7e1c7be),
+			UINT32_C(0x95c85eaa), UINT32_C(0x94a302f4),
+			UINT32_C(0x4d3cfbda), UINT32_C(0x786b2908),
+			UINT32_C(0x1010b275), UINT32_C(0x82d53d12),
+			UINT32_C(0x21e2a51c), UINT32_C(0x3d1e9150),
+			UINT32_C(0xb059261d), UINT32_C(0xd0638e1a),
+			UINT32_C(0x31860f05), UINT32_C(0x81f2864d),
+			UINT32_C(0xff4cfc35), UINT32_C(0x0451516d),
+			UINT32_C(0xbd086f26), UINT32_C(0xbc5654c1),
+			UINT32_C(0x65dfa427), UINT32_C(0xa82427f5),
+			UINT32_C(0x582e3014), UINT32_C(0xb8d2486d),
+			UINT32_C(0xc79a1749), UINT32_C(0x9a1d7745),
+			UINT32_C(0x8766bb54), UINT32_C(0x1e04a7f7),
+			UINT32_C(0x3d3dff8a), UINT32_C(0xd5ec6bf4),
+			UINT32_C(0xdbef7d9f), UINT32_C(0x36ec0ea3),
+			UINT32_C(0x1feb2e4f), UINT32_C(0x15cfcc5c),
+			UINT32_C(0xd8c423fb), UINT32_C(0xd0ef3cc9),
+			UINT32_C(0xeb244925), UINT32_C(0xba5590c8),
+			UINT32_C(0xa5f48ac4), UINT32_C(0x33c5321c),
+			UINT32_C(0x613b67b2), UINT32_C(0x479c3a22),
+			UINT32_C(0xe21339cc), UINT32_C(0x10d210aa),
+			UINT32_C(0x931dd7e2), UINT32_C(0xef05ee06),
+			UINT32_C(0xb82f2703), UINT32_C(0xa385cb2c),
+			UINT32_C(0x5d67133c), UINT32_C(0x877eb7b4),
+			UINT32_C(0x1e3437f7), UINT32_C(0x5afb43ae),
+			UINT32_C(0x53c078f3), UINT32_C(0x94d90481),
+			UINT32_C(0x1d964589), UINT32_C(0x08063a85),
+			UINT32_C(0xe1322228), UINT32_C(0x1956b1e5),
+			UINT32_C(0x31860f13), UINT32_C(0x2e7b022f),
+			UINT32_C(0x21182ca3), UINT32_C(0x96f703ac),
+			UINT32_C(0x46819e2e), UINT32_C(0x0d28fe52),
+			UINT32_C(0x3724d4dc), UINT32_C(0xa0eabe6b),
+			UINT32_C(0xc66699fd), UINT32_C(0xc6112fdd),
+			UINT32_C(0x19c1e69c), UINT32_C(0x04d3658a),
+			UINT32_C(0x4b55dd99), UINT32_C(0x31907d62),
+			UINT32_C(0xf854b522), UINT32_C(0x4d678f26),
+			UINT32_C(0x22ae0582), UINT32_C(0xeafed133),
+			UINT32_C(0xe4a51d21), UINT32_C(0x84bd6dd6),
+			UINT32_C(0xc1a51375), UINT32_C(0x3f28ee63),
+			UINT32_C(0xfb737b1a), UINT32_C(0x70a1660e),
+			UINT32_C(0x8a8dfaa3), UINT32_C(0x1be79937),
+			UINT32_C(0xf7476978), UINT32_C(0x513c1764),
+			UINT32_C(0x531ac6bf), UINT32_C(0x12c06908),
+			UINT32_C(0x001cdb95), UINT32_C(0x1a4b6a53),
+			UINT32_C(0xd067fce5), UINT32_C(0x12b2cfb6),
+			UINT32_C(0x9ddb477f), UINT32_C(0x740e0066),
+			UINT32_C(0x39ddf25a), UINT32_C(0xcc8bfa2d),
+			UINT32_C(0xf1b20eaf), UINT32_C(0x64f2632c),
+			UINT32_C(0x9783cdee), UINT32_C(0x63bfd4d8),
+			UINT32_C(0x0084cfe5), UINT32_C(0x75f4e9e2),
+			UINT32_C(0x19b48fd0), UINT32_C(0x6c48ddd8),
+			UINT32_C(0x7a36af93), UINT32_C(0x71865c4c),
+			UINT32_C(0x9ce0199d), UINT32_C(0x867027d7),
+			UINT32_C(0x2cb7b77f), UINT32_C(0x84ef01da),
+			UINT32_C(0x72f5972f), UINT32_C(0x040f7074),
+			UINT32_C(0xdf9afa29), UINT32_C(0xc921f94e),
+			UINT32_C(0x75c08a36), UINT32_C(0x18c1ef9a),
+			UINT32_C(0xd649a428), UINT32_C(0xc5b71937),
+			UINT32_C(0x8a30738a), UINT32_C(0xd97cd348),
+			UINT32_C(0x858129a6), UINT32_C(0x239e3b0a),
+			UINT32_C(0xbbb8abc4), UINT32_C(0x80fac4c2),
+			UINT32_C(0xecfcf20b), UINT32_C(0xd9d711f9),
+			UINT32_C(0xe2a4ef71), UINT32_C(0xb5fe87c0),
+			UINT32_C(0xbe8b06b2), UINT32_C(0xaafef5a7),
+			UINT32_C(0x9c15db3b), UINT32_C(0x0aeb8165),
+			UINT32_C(0x4389a84a), UINT32_C(0x253b1d7a),
+			UINT32_C(0x19047c79), UINT32_C(0x7cdc78a2),
+			UINT32_C(0xd20adf03), UINT32_C(0x56f55a71),
+			UINT32_C(0x3e730fa8), UINT32_C(0xfd8650d8),
+			UINT32_C(0x959e234e), UINT32_C(0xb7546681),
+			UINT32_C(0xdad1b22a), UINT32_C(0x142a6e85),
+			UINT32_C(0x8ef4bce6), UINT32_C(0x68235b9d),
+			UINT32_C(0x85a13f85), UINT32_C(0x74096ae7),
+			UINT32_C(0xa949bea2), UINT32_C(0x29322d0d),
+			UINT32_C(0xd5683858), UINT32_C(0x82846526),
+			UINT32_C(0x403dae08), UINT32_C(0x6dd1943a),
+			UINT32_C(0xe1279bff), UINT32_C(0x9e7e4f04),
+			UINT32_C(0x1c3a4524), UINT32_C(0x484525e4),
+			UINT32_C(0x81d4cc5f), UINT32_C(0xe24124c0),
+			UINT32_C(0x037464c0), UINT32_C(0xbf1bd691),
+			UINT32_C(0x26ceb003), UINT32_C(0x275ead3a),
+			UINT32_C(0xc5bde908), UINT32_C(0x26414ff3),
+			UINT32_C(0xa30519ad), UINT32_C(0xd7b43abe),
+			UINT32_C(0x2ce5d3d5), UINT32_C(0x88412761),
+			UINT32_C(0x97ca2070), UINT32_C(0xe5fbb9c7),
+			UINT32_C(0x276df0b4), UINT32_C(0x308f751f),
+			UINT32_C(0x37a97df6), UINT32_C(0xc9cd808c),
+			UINT32_C(0xfe4cb380), UINT32_C(0x3d469303),
+			UINT32_C(0xaee19096), UINT32_C(0xc0d5d42a),
+			UINT32_C(0x4e823ad3), UINT32_C(0xf5f9cc3b),
+			UINT32_C(0x4286619c), UINT32_C(0x9ca45e1c),
+			UINT32_C(0x66c97340), UINT32_C(0x891aec49),
+			UINT32_C(0x45bae606), UINT32_C(0xc798f047),
+			UINT32_C(0x52649d6c), UINT32_C(0xce86fdfc),
+			UINT32_C(0x80c6e402), UINT32_C(0xd6ec2f2b),
+			UINT32_C(0x27c82282), UINT32_C(0x1fe26ce0),
+			UINT32_C(0x92f57ea7), UINT32_C(0xde462f4d),
+			UINT32_C(0x07497cae), UINT32_C(0x5a48755c),
+			UINT32_C(0x721502dd), UINT32_C(0x6cbe7935),
+			UINT32_C(0x836d8003), UINT32_C(0x9ead7f70),
+			UINT32_C(0x9ab3a42f), UINT32_C(0x4c8652d6),
+			UINT32_C(0x32e39273), UINT32_C(0xe8fa3860),
+			UINT32_C(0x1da4f25a), UINT32_C(0x0cd6ef81),
+			UINT32_C(0x02503f7d), UINT32_C(0x8854a0a1),
+			UINT32_C(0x9a30c4e8), UINT32_C(0x88157153),
+			UINT32_C(0x05efe294), UINT32_C(0x57c4c925),
+			UINT32_C(0x2887d96f), UINT32_C(0xc1a71e3c),
+			UINT32_C(0xe9f84163), UINT32_C(0x2d0985de),
+			UINT32_C(0xd21e796c), UINT32_C(0x6fb5ce56),
+			UINT32_C(0x02614abf), UINT32_C(0xc3c7be2c),
+			UINT32_C(0xb54fed6f), UINT32_C(0xa617a083),
+			UINT32_C(0xc3142d8f), UINT32_C(0x6079e4ce),
+			UINT32_C(0xceffc147), UINT32_C(0x1d0cb81b),
+			UINT32_C(0xdc153e5f), UINT32_C(0xe36ef5bb),
+			UINT32_C(0xd531161a), UINT32_C(0x165b1015),
+			UINT32_C(0x7aa114ed), UINT32_C(0x3f7579b3),
+			UINT32_C(0xf7f395f1), UINT32_C(0xbc6172c7),
+			UINT32_C(0xa86f875e), UINT32_C(0x0e6c51b3),
+			UINT32_C(0xcdfec2af), UINT32_C(0x73c0e762),
+			UINT32_C(0x824c2009), UINT32_C(0xc5a87748),
+			UINT32_C(0x94d40125), UINT32_C(0x8aba3ffb),
+			UINT32_C(0xd32be060), UINT32_C(0x8c17eff0),
+			UINT32_C(0x21e2547e), UINT32_C(0x07cffad9),
+			UINT32_C(0x05340e15), UINT32_C(0xf3310c92),
+			UINT32_C(0x9d8d1908), UINT32_C(0x86ba527f),
+			UINT32_C(0xf943f672), UINT32_C(0xef73fbf0),
+			UINT32_C(0x46d95ca5), UINT32_C(0xc54cd95b),
+			UINT32_C(0x9d855e89), UINT32_C(0x4bb5af29),
+		},
+	}
 
-		s.Seed(seed)
-		s.Refill(result)
-		slices.Reverse(result)
-		keys2 := make([]byte, ISAAC_WORDS*ISAAC_WORDS_LOG)
-		for i, r := range result {
-			binary.BigEndian.PutUint64(keys2[i*ISAAC_WORDS_LOG:], r)
-			fmt.Printf("seed: %d 第 %d 组字节: %v\n", seed, i, keys2[i*ISAAC_WORDS_LOG:i*ISAAC_WORDS_LOG+ISAAC_WORDS_LOG])
-		}
-		require.Equal(t, keys1, keys2)
+	s := NewIsaac32()
+	s.Seed(0)
+	// for i := 0; i < ISAAC_WORDS; i++ {
+	// 	fmt.Printf("m[%d]: %d\n", i, s.m[i])
+	// }
+	// return
+
+	r := make([]uint32, ISAAC_WORDS)
+	s.Refill(r)
+
+	// for i := 0; i < ISAAC_WORDS; i++ {
+	// 	fmt.Printf("r[%d]: %d\n", i, r[i])
+	// }
+	// return
+	for idx, testCase := range testCases {
+		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
+			s.Refill(r)
+			require.Equal(t, testCase, r)
+		})
 	}
 }
