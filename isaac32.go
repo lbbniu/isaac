@@ -114,45 +114,27 @@ func (s *Isaac32) isaac_seed() {
 	h := uint32(0x30609119)
 
 	// Mix S->m so that every part of the seed affects every part of the state
-	for i := 0; i < ISAAC_WORDS; i += 8 {
-		a += s.m[i]
-		b += s.m[i+1]
-		c += s.m[i+2]
-		d += s.m[i+3]
-		e += s.m[i+4]
-		f += s.m[i+5]
-		g += s.m[i+6]
-		h += s.m[i+7]
-		a, b, c, d, e, f, g, h = mix32(a, b, c, d, e, f, g, h)
-		s.m[i] = a
-		s.m[i+1] = b
-		s.m[i+2] = c
-		s.m[i+3] = d
-		s.m[i+4] = e
-		s.m[i+5] = f
-		s.m[i+6] = g
-		s.m[i+7] = h
-	}
-
-	// 第二遍混合
-	for i := 0; i < ISAAC_WORDS; i += 8 {
-		a += s.m[i]
-		b += s.m[i+1]
-		c += s.m[i+2]
-		d += s.m[i+3]
-		e += s.m[i+4]
-		f += s.m[i+5]
-		g += s.m[i+6]
-		h += s.m[i+7]
-		a, b, c, d, e, f, g, h = mix32(a, b, c, d, e, f, g, h)
-		s.m[i] = a
-		s.m[i+1] = b
-		s.m[i+2] = c
-		s.m[i+3] = d
-		s.m[i+4] = e
-		s.m[i+5] = f
-		s.m[i+6] = g
-		s.m[i+7] = h
+	// 二遍混合
+	for range [2]struct{}{} {
+		for i := 0; i < ISAAC_WORDS; i += 8 {
+			a += s.m[i]
+			b += s.m[i+1]
+			c += s.m[i+2]
+			d += s.m[i+3]
+			e += s.m[i+4]
+			f += s.m[i+5]
+			g += s.m[i+6]
+			h += s.m[i+7]
+			a, b, c, d, e, f, g, h = mix32(a, b, c, d, e, f, g, h)
+			s.m[i] = a
+			s.m[i+1] = b
+			s.m[i+2] = c
+			s.m[i+3] = d
+			s.m[i+4] = e
+			s.m[i+5] = f
+			s.m[i+6] = g
+			s.m[i+7] = h
+		}
 	}
 
 	s.a = 0

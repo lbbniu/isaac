@@ -68,77 +68,40 @@ func (s *Isaac64) isaac_refill(r []uint64) {
 	s.c++
 
 	m := s.m
-
 	HALF := ISAAC_WORDS / 2
 
-	// 前半段
-	for i := 0; i < HALF; i += 4 {
-		// step1
+	// isaac_step 对应 C 语言中的 ISAAC_STEP 宏
+	step := func(i int, off int, mix uint64) {
+		a = (0 ^ mix) + m[off+i]
 		x := m[i]
-		a = (^(a ^ (a << 21))) + m[HALF+i]
 		y := ind64(s.m, x) + a + b
 		m[i] = y
 		b = just64(ind64(s.m, y>>ISAAC_WORDS_LOG) + x)
 		r[i] = b
+	}
 
-		// step2
-		x = m[i+1]
-		a = (a ^ (a >> 5)) + m[HALF+i+1]
-		y = ind64(s.m, x) + a + b
-		m[i+1] = y
-		b = just64(ind64(s.m, y>>ISAAC_WORDS_LOG) + x)
-		r[i+1] = b
-
-		// step3
-		x = m[i+2]
-		a = (a ^ (a << 12)) + m[HALF+i+2]
-		y = ind64(s.m, x) + a + b
-		m[i+2] = y
-		b = just64(ind64(s.m, y>>ISAAC_WORDS_LOG) + x)
-		r[i+2] = b
-
-		// step4
-		x = m[i+3]
-		a = (a ^ (a >> 33)) + m[HALF+i+3]
-		y = ind64(s.m, x) + a + b
-		m[i+3] = y
-		b = just64(ind64(s.m, y>>ISAAC_WORDS_LOG) + x)
-		r[i+3] = b
+	// 前半段
+	for i := 0; i < HALF; i += 4 {
+		// step1: a = ^ (a ^ (a << 21))
+		step(i, HALF, ^(a ^ (a << 21)))
+		// step2: a = a ^ (a >> 5)
+		step(i+1, HALF, a^(just64(a)>>5))
+		// step3: a = a ^ (a << 12)
+		step(i+2, HALF, a^(a<<12))
+		// step4: a = a ^ (a >> 33)
+		step(i+3, HALF, a^(just64(a)>>33))
 	}
 
 	// 后半段
 	for i := HALF; i < ISAAC_WORDS; i += 4 {
-		// step1
-		x := m[i]
-		a = (^(a ^ (a << 21))) + m[i-HALF]
-		y := ind64(s.m, x) + a + b
-		m[i] = y
-		b = just64(ind64(s.m, y>>ISAAC_WORDS_LOG) + x)
-		r[i] = b
-
-		// step2
-		x = m[i+1]
-		a = (a ^ (a >> 5)) + m[i-HALF+1]
-		y = ind64(s.m, x) + a + b
-		m[i+1] = y
-		b = just64(ind64(s.m, y>>ISAAC_WORDS_LOG) + x)
-		r[i+1] = b
-
-		// step3
-		x = m[i+2]
-		a = (a ^ (a << 12)) + m[i-HALF+2]
-		y = ind64(s.m, x) + a + b
-		m[i+2] = y
-		b = just64(ind64(s.m, y>>ISAAC_WORDS_LOG) + x)
-		r[i+2] = b
-
-		// step4
-		x = m[i+3]
-		a = (a ^ (a >> 33)) + m[i-HALF+3]
-		y = ind64(s.m, x) + a + b
-		m[i+3] = y
-		b = just64(ind64(s.m, y>>ISAAC_WORDS_LOG) + x)
-		r[i+3] = b
+		// step1: a = ^ (a ^ (a << 21))
+		step(i, -HALF, ^(a ^ (a << 21)))
+		// step2: a = a ^ (just (a) >>  5)
+		step(i+1, -HALF, a^(just64(a)>>5))
+		// step3: a = a^(a<<12)
+		step(i+2, -HALF, a^(a<<12))
+		// step4: a = a^(just64(a)>>33)
+		step(i+3, -HALF, a^(just64(a)>>33))
 	}
 
 	s.a = a
@@ -158,45 +121,27 @@ func (s *Isaac64) isaac_seed() {
 	h := uint64(0x98f5704f6c44c0ab)
 
 	// Mix S->m so that every part of the seed affects every part of the state
-	for i := 0; i < ISAAC_WORDS; i += 8 {
-		a += s.m[i]
-		b += s.m[i+1]
-		c += s.m[i+2]
-		d += s.m[i+3]
-		e += s.m[i+4]
-		f += s.m[i+5]
-		g += s.m[i+6]
-		h += s.m[i+7]
-		a, b, c, d, e, f, g, h = mix64(a, b, c, d, e, f, g, h)
-		s.m[i] = a
-		s.m[i+1] = b
-		s.m[i+2] = c
-		s.m[i+3] = d
-		s.m[i+4] = e
-		s.m[i+5] = f
-		s.m[i+6] = g
-		s.m[i+7] = h
-	}
-
-	// 第二遍混合
-	for i := 0; i < ISAAC_WORDS; i += 8 {
-		a += s.m[i]
-		b += s.m[i+1]
-		c += s.m[i+2]
-		d += s.m[i+3]
-		e += s.m[i+4]
-		f += s.m[i+5]
-		g += s.m[i+6]
-		h += s.m[i+7]
-		a, b, c, d, e, f, g, h = mix64(a, b, c, d, e, f, g, h)
-		s.m[i] = a
-		s.m[i+1] = b
-		s.m[i+2] = c
-		s.m[i+3] = d
-		s.m[i+4] = e
-		s.m[i+5] = f
-		s.m[i+6] = g
-		s.m[i+7] = h
+	// 二遍混合
+	for range [2]struct{}{} {
+		for i := 0; i < ISAAC_WORDS; i += 8 {
+			a += s.m[i]
+			b += s.m[i+1]
+			c += s.m[i+2]
+			d += s.m[i+3]
+			e += s.m[i+4]
+			f += s.m[i+5]
+			g += s.m[i+6]
+			h += s.m[i+7]
+			a, b, c, d, e, f, g, h = mix64(a, b, c, d, e, f, g, h)
+			s.m[i] = a
+			s.m[i+1] = b
+			s.m[i+2] = c
+			s.m[i+3] = d
+			s.m[i+4] = e
+			s.m[i+5] = f
+			s.m[i+6] = g
+			s.m[i+7] = h
+		}
 	}
 
 	s.a = 0
