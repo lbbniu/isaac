@@ -1,3 +1,4 @@
+// Package isaac implements the ISAAC CSPRNG
 package isaac
 
 import (
@@ -6,7 +7,7 @@ import (
 
 // 常量定义，对齐 C 版本
 const (
-	Bits     = 64
+	// Bits     = 64
 	Words    = 1 << 8
 	WordsLog = 8
 )
@@ -139,6 +140,7 @@ func (s *ISAAC[T]) Refill(r *[Words]T) {
 		r[i] = b
 	}
 
+	right := 33
 	// First half
 	for i := 0; i < HALF; i += 4 {
 		switch any(a).(type) {
@@ -158,9 +160,8 @@ func (s *ISAAC[T]) Refill(r *[Words]T) {
 			step(i+1, HALF, a^(just(a)>>5))
 			// step3: a = a ^ (a << 12)
 			step(i+2, HALF, a^(a<<12))
-			// step4: a = a ^ (a >> 33)
-			//nolint:staticcheck // >>33 is only executed in uint64 branch, uint32 won't trigger
-			step(i+3, HALF, a^(just(a)>>33))
+			// step4: a = a ^ (a >> 33) right is 33
+			step(i+3, HALF, a^(just(a)>>right))
 		}
 	}
 
@@ -183,9 +184,8 @@ func (s *ISAAC[T]) Refill(r *[Words]T) {
 			step(i+1, -HALF, a^(just(a)>>5))
 			// step3: a = a ^ (a << 12)
 			step(i+2, -HALF, a^(a<<12))
-			// step4: a = a ^ (a >> 33)
-			//nolint:staticcheck // >>33 is only executed in uint64 branch, uint32 won't trigger
-			step(i+3, -HALF, a^(just(a)>>33))
+			// step4: a = a ^ (a >> 33) right is 33
+			step(i+3, -HALF, a^(just(a)>>right))
 		}
 	}
 
