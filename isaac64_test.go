@@ -11,7 +11,7 @@ import (
 
 // TestIsaac64 用例数据来自 https://github.com/coreutils/coreutils/blob/master/gl/tests/test-rand-isaac.c
 func TestIsaac64(t *testing.T) {
-	testCases := [][]uint64{
+	testCases := [][ISAAC_WORDS]uint64{
 		{
 			UINT64_C(0x12a8f216af9418c2), UINT64_C(0xd4490ad526f14431),
 			UINT64_C(0xb49c3b3995091a36), UINT64_C(0x5b45e522e4b1b4ef),
@@ -277,12 +277,15 @@ func TestIsaac64(t *testing.T) {
 	// Seed with zeros, and discard the first buffer of output,
 	// as that's what the standard programs do.
 	s := NewIsaac64()
-	s.Seed(0)
-	r := make([]uint64, ISAAC_WORDS)
-	s.Refill(r)
+	var seed [ISAAC_WORDS]uint64
+	s.Seed(seed)
+
+	var r [ISAAC_WORDS]uint64
+	s.Refill(&r)
+
 	for idx, testCase := range testCases {
 		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
-			s.Refill(r)
+			s.Refill(&r)
 			require.Equal(t, testCase, r)
 		})
 	}
@@ -293,9 +296,11 @@ func TestIsaac64(t *testing.T) {
 func TestWxIsaac64(t *testing.T) {
 	s := NewIsaac64()
 	for _, seed := range []uint64{0xffffffffffffffff, 12312312} {
-		result := make([]uint64, ISAAC_WORDS)
-		s.Seed(seed)
-		s.Refill(result)
+		var result [ISAAC_WORDS]uint64
+		var seeds [ISAAC_WORDS]uint64
+		seeds[0] = seed
+		s.Seed(seeds)
+		s.Refill(&result)
 		keys1 := make([]byte, ISAAC_WORDS*ISAAC_WORDS_LOG)
 		for i, r := range result {
 			binary.LittleEndian.PutUint64(keys1[i*ISAAC_WORDS_LOG:], r)
@@ -303,9 +308,9 @@ func TestWxIsaac64(t *testing.T) {
 		}
 		slices.Reverse(keys1)
 
-		s.Seed(seed)
-		s.Refill(result)
-		slices.Reverse(result)
+		s.Seed(seeds)
+		s.Refill(&result)
+		slices.Reverse(result[:])
 		keys2 := make([]byte, ISAAC_WORDS*ISAAC_WORDS_LOG)
 		for i, r := range result {
 			binary.BigEndian.PutUint64(keys2[i*ISAAC_WORDS_LOG:], r)

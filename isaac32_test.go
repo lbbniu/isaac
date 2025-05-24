@@ -8,7 +8,7 @@ import (
 )
 
 func TestIsaac32(t *testing.T) {
-	testCases := [][]uint32{
+	testCases := [][ISAAC_WORDS]uint32{
 		{
 			UINT32_C(0xf650e4c8), UINT32_C(0xe448e96d),
 			UINT32_C(0x98db2fb4), UINT32_C(0xf5fad54f),
@@ -272,22 +272,15 @@ func TestIsaac32(t *testing.T) {
 	}
 
 	s := NewIsaac32()
-	s.Seed(0)
-	// for i := 0; i < ISAAC_WORDS; i++ {
-	// 	fmt.Printf("m[%d]: %d\n", i, s.m[i])
-	// }
-	// return
+	var seed [ISAAC_WORDS]uint32
+	s.Seed(seed)
 
-	r := make([]uint32, ISAAC_WORDS)
-	s.Refill(r)
+	var r [ISAAC_WORDS]uint32
+	s.Refill(&r)
 
-	// for i := 0; i < ISAAC_WORDS; i++ {
-	// 	fmt.Printf("r[%d]: %d\n", i, r[i])
-	// }
-	// return
 	for idx, testCase := range testCases {
 		t.Run(fmt.Sprintf("test case %d", idx), func(t *testing.T) {
-			s.Refill(r)
+			s.Refill(&r)
 			require.Equal(t, testCase, r)
 		})
 	}

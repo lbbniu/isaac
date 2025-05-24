@@ -55,7 +55,7 @@ func mix32(a, b, c, d, e, f, g, h uint32) (na, nb, nc, nd, ne, nf, ng, nh uint32
 }
 
 // isaac_refill 对应 C 版本的 isaac_refill 函数
-func (s *Isaac32) isaac_refill(r []uint32) {
+func (s *Isaac32) isaac_refill(r *[ISAAC_WORDS]uint32) {
 	a := s.a
 	b := s.b + (s.c + 1)
 	s.c++
@@ -101,47 +101,6 @@ func (s *Isaac32) isaac_refill(r []uint32) {
 	s.b = b
 }
 
-// isaac_seed 对应 C 版本的 isaac_seed 函数
-func (s *Isaac32) isaac_seed() {
-	// 使用与 C 版本相同的初始值
-	a := uint32(0x1367df5a)
-	b := uint32(0x95d90059)
-	c := uint32(0xc3163e4b)
-	d := uint32(0x0f421ad8)
-	e := uint32(0xd92a4a78)
-	f := uint32(0xa51a3c49)
-	g := uint32(0xc4efea1b)
-	h := uint32(0x30609119)
-
-	// Mix S->m so that every part of the seed affects every part of the state
-	// 二遍混合
-	for range [2]struct{}{} {
-		for i := 0; i < ISAAC_WORDS; i += 8 {
-			a += s.m[i]
-			b += s.m[i+1]
-			c += s.m[i+2]
-			d += s.m[i+3]
-			e += s.m[i+4]
-			f += s.m[i+5]
-			g += s.m[i+6]
-			h += s.m[i+7]
-			a, b, c, d, e, f, g, h = mix32(a, b, c, d, e, f, g, h)
-			s.m[i] = a
-			s.m[i+1] = b
-			s.m[i+2] = c
-			s.m[i+3] = d
-			s.m[i+4] = e
-			s.m[i+5] = f
-			s.m[i+6] = g
-			s.m[i+7] = h
-		}
-	}
-
-	s.a = 0
-	s.b = 0
-	s.c = 0
-}
-
 func NewIsaac32() *Isaac32 {
 	return &Isaac32{
 		m: make([]uint32, ISAAC_WORDS),
@@ -149,7 +108,8 @@ func NewIsaac32() *Isaac32 {
 }
 
 // Seed initializes ISAAC32
-func (isaac *Isaac32) Seed(seed uint32, initValues ...uint32) {
+// 相当于c语言的 isaac_seed 函数
+func (isaac *Isaac32) Seed(seed [ISAAC_WORDS]uint32, initValues ...uint32) {
 	if len(initValues) > 0 && len(initValues) != 8 {
 		panic("isaac: need exactly 8 initial values for uint32")
 	}
@@ -180,9 +140,7 @@ func (isaac *Isaac32) Seed(seed uint32, initValues ...uint32) {
 	for i := 0; i < ISAAC_WORDS; i++ {
 		isaac.m[i] = 0
 	}
-
-	// Initialize m array with seed
-	isaac.m[0] = seed
+	copy(isaac.m, seed[:])
 
 	// Mix S->m so that every part of the seed affects every part of the state
 	// Two rounds of mixing
@@ -213,15 +171,15 @@ func (isaac *Isaac32) Seed(seed uint32, initValues ...uint32) {
 	isaac.c = 0
 }
 
-func (s *Isaac32) Refill(r []uint32) {
+func (s *Isaac32) Refill(r *[ISAAC_WORDS]uint32) {
 	s.isaac_refill(r)
 }
 
 func (s *Isaac32) Uint32() uint32 {
 	if r := s.r; len(r) == 0 {
-		r = make([]uint32, ISAAC_WORDS)
-		s.Refill(r)
-		s.r = r
+		var r [ISAAC_WORDS]uint32
+		s.Refill(&r)
+		s.r = r[:]
 	}
 	r := s.r[0]
 	s.r = s.r[1:]

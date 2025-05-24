@@ -13,13 +13,6 @@ type Isaac64 struct {
 	c uint64
 }
 
-// 常量定义，对齐 C 版本
-const (
-	ISAAC_BITS      = 64
-	ISAAC_WORDS     = 1 << 8
-	ISAAC_WORDS_LOG = 8
-)
-
 func just64(a uint64) uint64 {
 	// return a & ((1 << 1 << (ISAAC_BITS - 1)) - 1)
 	return a & math.MaxUint64
@@ -62,7 +55,7 @@ func mix64(a, b, c, d, e, f, g, h uint64) (na, nb, nc, nd, ne, nf, ng, nh uint64
 }
 
 // isaac_refill 对应 C 版本的 isaac_refill 函数
-func (s *Isaac64) isaac_refill(r []uint64) {
+func (s *Isaac64) isaac_refill(r *[ISAAC_WORDS]uint64) {
 	a := s.a
 	b := s.b + (s.c + 1)
 	s.c++
@@ -108,47 +101,7 @@ func (s *Isaac64) isaac_refill(r []uint64) {
 	s.b = b
 }
 
-// isaac_seed 对应 C 版本的 isaac_seed 函数
-func (s *Isaac64) isaac_seed() {
-	// 使用与 C 版本相同的初始值
-	a := uint64(0x647c4677a2884b7c)
-	b := uint64(0xb9f8b322c73ac862)
-	c := uint64(0x8c0ea5053d4712a0)
-	d := uint64(0xb29b2e824a595524)
-	e := uint64(0x82f053db8355e0ce)
-	f := uint64(0x48fe4a0fa5a09315)
-	g := uint64(0xae985bf2cbfc89ed)
-	h := uint64(0x98f5704f6c44c0ab)
-
-	// Mix S->m so that every part of the seed affects every part of the state
-	// 二遍混合
-	for range [2]struct{}{} {
-		for i := 0; i < ISAAC_WORDS; i += 8 {
-			a += s.m[i]
-			b += s.m[i+1]
-			c += s.m[i+2]
-			d += s.m[i+3]
-			e += s.m[i+4]
-			f += s.m[i+5]
-			g += s.m[i+6]
-			h += s.m[i+7]
-			a, b, c, d, e, f, g, h = mix64(a, b, c, d, e, f, g, h)
-			s.m[i] = a
-			s.m[i+1] = b
-			s.m[i+2] = c
-			s.m[i+3] = d
-			s.m[i+4] = e
-			s.m[i+5] = f
-			s.m[i+6] = g
-			s.m[i+7] = h
-		}
-	}
-
-	s.a = 0
-	s.b = 0
-	s.c = 0
-}
-
+// NewIsaac64 创建一个 ISAAC64 实例
 func NewIsaac64() *Isaac64 {
 	return &Isaac64{
 		m: make([]uint64, ISAAC_WORDS),
@@ -156,7 +109,8 @@ func NewIsaac64() *Isaac64 {
 }
 
 // Seed initializes ISAAC64
-func (isaac *Isaac64) Seed(seed uint64, initValues ...uint64) {
+// 相当于c语言的 isaac_seed 函数
+func (s *Isaac64) Seed(seed [ISAAC_WORDS]uint64, initValues ...uint64) {
 	if len(initValues) > 0 && len(initValues) != 8 {
 		panic("isaac: need exactly 8 initial values for uint64")
 	}
@@ -185,50 +139,48 @@ func (isaac *Isaac64) Seed(seed uint64, initValues ...uint64) {
 
 	// Initialize m array
 	for i := 0; i < ISAAC_WORDS; i++ {
-		isaac.m[i] = 0
+		s.m[i] = 0
 	}
-
-	// Initialize m array with seed
-	isaac.m[0] = seed
+	copy(s.m, seed[:])
 
 	// Mix S->m so that every part of the seed affects every part of the state
 	// Two rounds of mixing
 	for range [2]struct{}{} {
 		for i := 0; i < ISAAC_WORDS; i += 8 {
-			a += isaac.m[i]
-			b += isaac.m[i+1]
-			c += isaac.m[i+2]
-			d += isaac.m[i+3]
-			e += isaac.m[i+4]
-			f += isaac.m[i+5]
-			g += isaac.m[i+6]
-			h += isaac.m[i+7]
+			a += s.m[i]
+			b += s.m[i+1]
+			c += s.m[i+2]
+			d += s.m[i+3]
+			e += s.m[i+4]
+			f += s.m[i+5]
+			g += s.m[i+6]
+			h += s.m[i+7]
 			a, b, c, d, e, f, g, h = mix64(a, b, c, d, e, f, g, h)
-			isaac.m[i] = a
-			isaac.m[i+1] = b
-			isaac.m[i+2] = c
-			isaac.m[i+3] = d
-			isaac.m[i+4] = e
-			isaac.m[i+5] = f
-			isaac.m[i+6] = g
-			isaac.m[i+7] = h
+			s.m[i] = a
+			s.m[i+1] = b
+			s.m[i+2] = c
+			s.m[i+3] = d
+			s.m[i+4] = e
+			s.m[i+5] = f
+			s.m[i+6] = g
+			s.m[i+7] = h
 		}
 	}
 
-	isaac.a = 0
-	isaac.b = 0
-	isaac.c = 0
+	s.a = 0
+	s.b = 0
+	s.c = 0
 }
 
-func (s *Isaac64) Refill(r []uint64) {
+func (s *Isaac64) Refill(r *[ISAAC_WORDS]uint64) {
 	s.isaac_refill(r)
 }
 
 func (s *Isaac64) Uint64() uint64 {
 	if r := s.r; len(r) == 0 {
-		r = make([]uint64, ISAAC_WORDS)
-		s.Refill(r)
-		s.r = r
+		var r [ISAAC_WORDS]uint64
+		s.Refill(&r)
+		s.r = r[:]
 	}
 	r := s.r[0]
 	s.r = s.r[1:]
