@@ -6,8 +6,8 @@ type UINT32_C = uint32
 
 // Isaac32 对应 struct isaac_state
 type Isaac32 struct {
-	m []uint32 // 状态表
-	r []uint32 // 结果表
+	m [ISAAC_WORDS]uint32 // 状态表
+	r []uint32            // 结果表
 	a uint32
 	b uint32
 	c uint32
@@ -21,7 +21,7 @@ func just32(a uint32) uint32 {
 // ind32 原始C里的宏：ind(mm, x) = *(ub4*)((ub1*)(mm) + ((x) & ((RANDSIZ-1)<<2)))
 // 解释：对 mm 做"按字节"的偏移，然后再取 32 位整型。
 // 等价于在 Go 中： mm[( (x) & ((RANDSIZ-1)<<2)) >> 2]。
-func ind32(m []uint32, x uint32) uint32 {
+func ind32(m [ISAAC_WORDS]uint32, x uint32) uint32 {
 	return m[(x&((ISAAC_WORDS-1)*4))>>2]
 }
 
@@ -60,16 +60,15 @@ func (s *Isaac32) isaac_refill(r *[ISAAC_WORDS]uint32) {
 	b := s.b + (s.c + 1)
 	s.c++
 
-	m := s.m
 	HALF := ISAAC_WORDS / 2
 
 	// isaac_step 对应 C 语言中的 ISAAC_STEP 宏
 	step := func(i int, off int, mix uint32) {
-		a = (a ^ mix) + m[off+i]
-		x := m[i]
-		y := ind32(m, x) + a + b
-		m[i] = y
-		b = just32(ind32(m, y>>ISAAC_WORDS_LOG) + x)
+		a = (a ^ mix) + s.m[off+i]
+		x := s.m[i]
+		y := ind32(s.m, x) + a + b
+		s.m[i] = y
+		b = just32(ind32(s.m, y>>ISAAC_WORDS_LOG) + x)
 		r[i] = b
 	}
 
@@ -102,9 +101,7 @@ func (s *Isaac32) isaac_refill(r *[ISAAC_WORDS]uint32) {
 }
 
 func NewIsaac32() *Isaac32 {
-	return &Isaac32{
-		m: make([]uint32, ISAAC_WORDS),
-	}
+	return &Isaac32{}
 }
 
 // Seed initializes ISAAC32
@@ -138,9 +135,8 @@ func (isaac *Isaac32) Seed(seed [ISAAC_WORDS]uint32, initValues ...uint32) {
 
 	// Initialize m array
 	for i := 0; i < ISAAC_WORDS; i++ {
-		isaac.m[i] = 0
+		isaac.m[i] = seed[i]
 	}
-	copy(isaac.m, seed[:])
 
 	// Mix S->m so that every part of the seed affects every part of the state
 	// Two rounds of mixing

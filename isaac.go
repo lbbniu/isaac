@@ -13,7 +13,7 @@ const (
 
 // ISAAC struct using generic type
 type ISAAC[T uint32 | uint64] struct {
-	m []T
+	m [ISAAC_WORDS]T
 	r []T
 	a T
 	b T
@@ -23,7 +23,6 @@ type ISAAC[T uint32 | uint64] struct {
 // New creates a new ISAAC instance
 func New[T uint32 | uint64]() *ISAAC[T] {
 	var s ISAAC[T]
-	s.m = make([]T, ISAAC_WORDS)
 	return &s
 }
 
@@ -84,9 +83,8 @@ func (s *ISAAC[T]) Seed(seed [ISAAC_WORDS]T, initValues ...T) {
 
 	// Initialize m array
 	for i := 0; i < ISAAC_WORDS; i++ {
-		s.m[i] = 0
+		s.m[i] = seed[i]
 	}
-	copy(s.m[:], seed[:])
 
 	// Mix S->m so that every part of the seed affects every part of the state
 	// Two rounds of mixing
@@ -123,21 +121,20 @@ func (s *ISAAC[T]) Refill(r *[ISAAC_WORDS]T) {
 	b := s.b + (s.c + 1)
 	s.c++
 
-	m := s.m
 	HALF := ISAAC_WORDS / 2
 
 	// isaac_step corresponds to the ISAAC_STEP macro in C
 	step := func(i int, off int, mix T) {
 		switch any(a).(type) {
 		case uint32:
-			a = (a ^ mix) + m[off+i]
+			a = (a ^ mix) + s.m[off+i]
 		case uint64:
-			a = (0 ^ mix) + m[off+i]
+			a = (0 ^ mix) + s.m[off+i]
 		}
-		x := m[i]
-		y := ind(m, x) + a + b
-		m[i] = y
-		b = just(ind(m, y>>ISAAC_WORDS_LOG) + x)
+		x := s.m[i]
+		y := ind(s.m, x) + a + b
+		s.m[i] = y
+		b = just(ind(s.m, y>>ISAAC_WORDS_LOG) + x)
 		r[i] = b
 	}
 
@@ -208,7 +205,7 @@ func (s *ISAAC[T]) Rand() T {
 }
 
 // Generic implementation of ind function
-func ind[T uint32 | uint64](m []T, x T) T {
+func ind[T uint32 | uint64](m [ISAAC_WORDS]T, x T) T {
 	var shift T
 	switch any(x).(type) {
 	case uint32:

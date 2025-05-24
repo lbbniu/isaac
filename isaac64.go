@@ -6,8 +6,8 @@ type UINT64_C = uint64
 
 // Isaac64 对应 struct isaac_state
 type Isaac64 struct {
-	m []uint64 // 状态表
-	r []uint64 // 结果表
+	m [ISAAC_WORDS]uint64 // 状态表
+	r []uint64            // 结果表
 	a uint64
 	b uint64
 	c uint64
@@ -21,7 +21,7 @@ func just64(a uint64) uint64 {
 // ind64 原始C里的宏：ind64(mm, x) = *(ub8*)((ub1*)(mm) + ((x) & ((RANDSIZ-1)<<3)))
 // 解释：对 mm 做"按字节"的偏移，然后再取 64 位整型。
 // 等价于在 Go 中： mm[( (x) & ((RANDSIZ-1)<<3)) >> 3]。
-func ind64(m []uint64, x uint64) uint64 {
+func ind64(m [ISAAC_WORDS]uint64, x uint64) uint64 {
 	return m[(x&((ISAAC_WORDS-1)*8))>>3]
 }
 
@@ -60,15 +60,14 @@ func (s *Isaac64) isaac_refill(r *[ISAAC_WORDS]uint64) {
 	b := s.b + (s.c + 1)
 	s.c++
 
-	m := s.m
 	HALF := ISAAC_WORDS / 2
 
 	// isaac_step 对应 C 语言中的 ISAAC_STEP 宏
 	step := func(i int, off int, mix uint64) {
-		a = (0 ^ mix) + m[off+i]
-		x := m[i]
+		a = (0 ^ mix) + s.m[off+i]
+		x := s.m[i]
 		y := ind64(s.m, x) + a + b
-		m[i] = y
+		s.m[i] = y
 		b = just64(ind64(s.m, y>>ISAAC_WORDS_LOG) + x)
 		r[i] = b
 	}
@@ -103,9 +102,7 @@ func (s *Isaac64) isaac_refill(r *[ISAAC_WORDS]uint64) {
 
 // NewIsaac64 创建一个 ISAAC64 实例
 func NewIsaac64() *Isaac64 {
-	return &Isaac64{
-		m: make([]uint64, ISAAC_WORDS),
-	}
+	return &Isaac64{}
 }
 
 // Seed initializes ISAAC64
@@ -139,9 +136,8 @@ func (s *Isaac64) Seed(seed [ISAAC_WORDS]uint64, initValues ...uint64) {
 
 	// Initialize m array
 	for i := 0; i < ISAAC_WORDS; i++ {
-		s.m[i] = 0
+		s.m[i] = seed[i]
 	}
-	copy(s.m, seed[:])
 
 	// Mix S->m so that every part of the seed affects every part of the state
 	// Two rounds of mixing
